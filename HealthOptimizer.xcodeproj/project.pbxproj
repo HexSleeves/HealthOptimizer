@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		6C1709692F101D190079FBA2 /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = 6C1709682F101D190079FBA2 /* OpenAI */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		6C1709042F100E780079FBA2 /* HealthOptimizer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HealthOptimizer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6C1709692F101D190079FBA2 /* OpenAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = HealthOptimizer;
 			packageProductDependencies = (
+				6C1709682F101D190079FBA2 /* OpenAI */,
 			);
 			productName = HealthOptimizer;
 			productReference = 6C1709042F100E780079FBA2 /* HealthOptimizer.app */;
@@ -94,6 +100,10 @@
 			);
 			mainGroup = 6C1708FB2F100E780079FBA2;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				6C1709662F101CD90079FBA2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				6C1709672F101D190079FBA2 /* XCRemoteSwiftPackageReference "OpenAI" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 6C1709052F100E780079FBA2 /* Products */;
 			projectDirPath = "";
@@ -246,6 +256,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MG77MU456K;
@@ -290,6 +301,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = MG77MU456K;
@@ -351,6 +363,33 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		6C1709662F101CD90079FBA2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.7.0;
+			};
+		};
+		6C1709672F101D190079FBA2 /* XCRemoteSwiftPackageReference "OpenAI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MacPaw/OpenAI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.4.7;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		6C1709682F101D190079FBA2 /* OpenAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C1709672F101D190079FBA2 /* XCRemoteSwiftPackageReference "OpenAI" */;
+			productName = OpenAI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6C1708FC2F100E780079FBA2 /* Project object */;
 }
