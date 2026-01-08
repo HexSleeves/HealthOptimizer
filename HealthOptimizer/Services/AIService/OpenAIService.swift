@@ -18,7 +18,6 @@ final class OpenAIService: AIServiceProtocol {
     
     private let keychainService: KeychainServiceProtocol
     private let promptBuilder: AIPromptBuilder
-    private var openAIClient: OpenAI?
     
     var providerName: String { "GPT (OpenAI)" }
     var provider: AIProvider { .openAI }
@@ -44,7 +43,7 @@ final class OpenAIService: AIServiceProtocol {
             throw AIServiceError.notConfigured
         }
         
-        // Initialize or reinitialize client with current API key
+        // Initialize client with current API key
         let configuration = OpenAI.Configuration(
             token: apiKey,
             timeoutInterval: 120.0
@@ -56,16 +55,18 @@ final class OpenAIService: AIServiceProtocol {
         let userPrompt = promptBuilder.buildUserPrompt(for: profile)
         
         // Get selected model from settings
-        let model = AISettings.shared.selectedModel
+        let modelName = AISettings.shared.selectedProvider == .openAI 
+            ? AISettings.shared.selectedModel 
+            : AIProvider.openAI.defaultModel
         
-        // Create chat query
+        // Create chat query with proper message types
         let query = ChatQuery(
             messages: [
-                .system(.init(content: systemPrompt)),
+                .system(.init(content: .string(systemPrompt))),
                 .user(.init(content: .string(userPrompt)))
             ],
-            model: model,
-            responseFormat: .jsonObject,  // Request JSON response
+            model: modelName,
+            responseFormat: .jsonObject,
             temperature: 0.7
         )
         
@@ -74,18 +75,25 @@ final class OpenAIService: AIServiceProtocol {
             
             // Extract response content
             guard let choice = result.choices.first,
-                  let content = choice.message.content else {
+                  let content = choice.message.content?.string else {
                 throw AIServiceError.invalidResponse
             }
             
             // Parse the JSON response
             return try parseResponse(content)
             
-        } catch let error as OpenAIError {
-            throw mapOpenAIError(error)
         } catch let error as AIServiceError {
             throw error
         } catch {
+            // Check for common OpenAI errors
+            let errorMessage = error.localizedDescription.lowercased()
+            if errorMessage.contains("rate") || errorMessage.contains("limit") {
+                throw AIServiceError.rateLimited
+            } else if errorMessage.contains("invalid") && errorMessage.contains("key") {
+                throw AIServiceError.invalidAPIKey
+            } else if errorMessage.contains("timeout") {
+                throw AIServiceError.timeout
+            }
             throw AIServiceError.networkError(underlying: error)
         }
     }
@@ -134,42 +142,4 @@ final class OpenAIService: AIServiceProtocol {
         
         return text
     }
-    
-    private func mapOpenAIError(_ error: OpenAIError) -> AIServiceError {
-        switch error {
-        case .apiError(let apiError):
-            // Check for specific API error types
-            if apiError.message.contains("rate_limit") {
-                return .rateLimited
-            } else if apiError.message.contains("invalid_api_key") || apiError.message.contains("Incorrect API key") {
-                return .invalidAPIKey
-            } else {
-                return .serverError(statusCode: 0, message: apiError.message)
-            }
-        case .emptyData:
-            return .invalidResponse
-        case .invalidData:
-            return .invalidResponse
-        default:
-            return .unknown(underlying: error)
-        }
-    }
-}
-
-// MARK: - OpenAI Error Extension
-
-/// OpenAI SDK errors that we need to handle
-enum OpenAIError: Error {
-    case apiError(APIErrorResponse)
-    case emptyData
-    case invalidData
-    case jsonDecodingFailure(Error)
-    case invalidURL
-}
-
-/// API error response structure
-struct APIErrorResponse: Codable {
-    let message: String
-    let type: String?
-    let code: String?
 }
