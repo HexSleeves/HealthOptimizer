@@ -116,7 +116,7 @@ final class HealthRecommendation {
 // MARK: - Recommendation Status
 
 /// Status of recommendation generation
-enum RecommendationStatus: String, Codable {
+enum RecommendationStatus: String, Codable, Sendable {
     case pending = "Pending"
     case generating = "Generating"
     case completed = "Completed"
@@ -129,7 +129,7 @@ enum RecommendationStatus: String, Codable {
 /// Structure for parsing AI API response
 /// This intermediate model is used to parse the raw AI response before
 /// mapping to our domain models
-struct AIHealthRecommendationResponse: Codable {
+struct AIHealthRecommendationResponse: Codable, Sendable {
     var healthSummary: String
     var keyInsights: [String]
     var priorityActions: [String]

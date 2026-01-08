@@ -11,7 +11,7 @@ import Foundation
 
 /// Biological sex for health calculations
 /// Used for accurate BMR, hormone considerations, etc.
-enum BiologicalSex: String, Codable, CaseIterable, Identifiable {
+enum BiologicalSex: String, Codable, CaseIterable, Identifiable, Sendable {
     case male = "Male"
     case female = "Female"
     
@@ -21,7 +21,7 @@ enum BiologicalSex: String, Codable, CaseIterable, Identifiable {
 // MARK: - BMI Categories
 
 /// BMI classification categories
-enum BMICategory: String, Codable {
+enum BMICategory: String, Codable, Sendable {
     case underweight = "Underweight"
     case normal = "Normal"
     case overweight = "Overweight"
@@ -53,7 +53,7 @@ enum BMICategory: String, Codable {
 // MARK: - Fitness Level
 
 /// Self-assessed fitness level
-enum FitnessLevel: String, Codable, CaseIterable, Identifiable {
+enum FitnessLevel: String, Codable, CaseIterable, Identifiable, Sendable {
     case beginner = "Beginner"
     case intermediate = "Intermediate"
     case advanced = "Advanced"
@@ -78,7 +78,7 @@ enum FitnessLevel: String, Codable, CaseIterable, Identifiable {
 // MARK: - Activity Types
 
 /// Types of physical activities
-enum ActivityType: String, Codable, CaseIterable, Identifiable {
+enum ActivityType: String, Codable, CaseIterable, Identifiable, Sendable {
     case walking = "Walking"
     case running = "Running"
     case cycling = "Cycling"
@@ -119,7 +119,7 @@ enum ActivityType: String, Codable, CaseIterable, Identifiable {
 // MARK: - Sleep Quality
 
 /// Self-assessed sleep quality
-enum SleepQuality: String, Codable, CaseIterable, Identifiable {
+enum SleepQuality: String, Codable, CaseIterable, Identifiable, Sendable {
     case poor = "Poor"
     case fair = "Fair"
     case good = "Good"
@@ -144,7 +144,7 @@ enum SleepQuality: String, Codable, CaseIterable, Identifiable {
 // MARK: - Stress Level
 
 /// Self-assessed stress level
-enum StressLevel: String, Codable, CaseIterable, Identifiable {
+enum StressLevel: String, Codable, CaseIterable, Identifiable, Sendable {
     case low = "Low"
     case moderate = "Moderate"
     case high = "High"
@@ -169,7 +169,7 @@ enum StressLevel: String, Codable, CaseIterable, Identifiable {
 // MARK: - Occupation Type
 
 /// Type of occupation affecting daily activity
-enum OccupationType: String, Codable, CaseIterable, Identifiable {
+enum OccupationType: String, Codable, CaseIterable, Identifiable, Sendable {
     case sedentary = "Sedentary (Desk Job)"
     case lightlyActive = "Lightly Active (Standing/Walking)"
     case moderatelyActive = "Moderately Active (Physical Work)"
@@ -181,7 +181,7 @@ enum OccupationType: String, Codable, CaseIterable, Identifiable {
 // MARK: - Consumption Frequency
 
 /// Frequency of consumption (alcohol, etc.)
-enum ConsumptionFrequency: String, Codable, CaseIterable, Identifiable {
+enum ConsumptionFrequency: String, Codable, CaseIterable, Identifiable, Sendable {
     case never = "Never"
     case rarely = "Rarely (few times/year)"
     case occasionally = "Occasionally (few times/month)"
@@ -194,7 +194,7 @@ enum ConsumptionFrequency: String, Codable, CaseIterable, Identifiable {
 // MARK: - Smoking Status
 
 /// Current smoking status
-enum SmokingStatus: String, Codable, CaseIterable, Identifiable {
+enum SmokingStatus: String, Codable, CaseIterable, Identifiable, Sendable {
     case never = "Never Smoked"
     case former = "Former Smoker"
     case occasional = "Occasional Smoker"
@@ -206,7 +206,7 @@ enum SmokingStatus: String, Codable, CaseIterable, Identifiable {
 // MARK: - Diet Type
 
 /// Primary diet type
-enum DietType: String, Codable, CaseIterable, Identifiable {
+enum DietType: String, Codable, CaseIterable, Identifiable, Sendable {
     case omnivore = "Omnivore"
     case vegetarian = "Vegetarian"
     case vegan = "Vegan"
@@ -241,7 +241,7 @@ enum DietType: String, Codable, CaseIterable, Identifiable {
 // MARK: - Cooking Skill Level
 
 /// Self-assessed cooking ability
-enum CookingSkillLevel: String, Codable, CaseIterable, Identifiable {
+enum CookingSkillLevel: String, Codable, CaseIterable, Identifiable, Sendable {
     case beginner = "Beginner"
     case intermediate = "Intermediate"
     case advanced = "Advanced"

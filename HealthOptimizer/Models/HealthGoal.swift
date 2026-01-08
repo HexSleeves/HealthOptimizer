@@ -10,7 +10,7 @@ import Foundation
 // MARK: - Health Goal
 
 /// Primary health and fitness goals
-enum HealthGoal: String, Codable, CaseIterable, Identifiable {
+enum HealthGoal: String, Codable, CaseIterable, Identifiable, Sendable {
     // Weight Management
     case loseWeight = "Lose Weight"
     case gainWeight = "Gain Weight"

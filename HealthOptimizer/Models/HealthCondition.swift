@@ -11,7 +11,7 @@ import Foundation
 
 /// Common health conditions that affect supplementation, diet, and exercise recommendations
 /// IMPORTANT: This is not an exhaustive list. Users should always consult healthcare providers.
-enum HealthCondition: String, Codable, CaseIterable, Identifiable {
+enum HealthCondition: String, Codable, CaseIterable, Identifiable, Sendable {
     // Metabolic
     case diabetes = "Type 2 Diabetes"
     case prediabetes = "Prediabetes"

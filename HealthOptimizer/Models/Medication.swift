@@ -11,7 +11,7 @@ import Foundation
 
 /// Represents a current medication the user is taking
 /// Important for checking interactions with supplements
-struct Medication: Codable, Identifiable, Hashable {
+struct Medication: Codable, Identifiable, Hashable, Sendable {
     var id: UUID
     var name: String
     var dosage: String
@@ -39,7 +39,7 @@ struct Medication: Codable, Identifiable, Hashable {
 // MARK: - Medication Frequency
 
 /// How often a medication is taken
-enum MedicationFrequency: String, Codable, CaseIterable, Identifiable {
+enum MedicationFrequency: String, Codable, CaseIterable, Identifiable, Sendable {
     case asNeeded = "As Needed"
     case daily = "Once Daily"
     case twiceDaily = "Twice Daily"
@@ -54,7 +54,7 @@ enum MedicationFrequency: String, Codable, CaseIterable, Identifiable {
 
 /// Represents a supplement the user is currently taking
 /// Used to avoid duplication and check for interactions
-struct CurrentSupplement: Codable, Identifiable, Hashable {
+struct CurrentSupplement: Codable, Identifiable, Hashable, Sendable {
     var id: UUID
     var name: String
     var dosage: String
