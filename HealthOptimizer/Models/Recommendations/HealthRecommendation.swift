@@ -14,45 +14,45 @@ import SwiftData
 /// This is the main output model that combines all recommendation types
 @Model
 final class HealthRecommendation {
-    
+
     var id: UUID
     var createdAt: Date
     var updatedAt: Date
-    
+
     /// Status of the recommendation generation
     var status: RecommendationStatus
-    
+
     /// Overall health summary from AI analysis
     var healthSummary: String
-    
+
     /// Key insights identified by AI
     var keyInsights: [String]
-    
+
     /// Priority actions to focus on
     var priorityActions: [String]
-    
+
     /// Serialized supplement plan (JSON)
     var supplementPlanData: Data?
-    
+
     /// Serialized workout plan (JSON)
     var workoutPlanData: Data?
-    
+
     /// Serialized diet plan (JSON)
     var dietPlanData: Data?
-    
+
     /// General lifestyle recommendations
     var lifestyleRecommendations: [String]
-    
+
     /// Medical disclaimers and warnings
     var disclaimers: [String]
-    
+
     /// Suggested follow-up timeline (weeks)
     var suggestedReviewWeeks: Int
-    
+
     // MARK: - Computed Properties
-    
+
     /// Decoded supplement plan
-    var supplementPlan: SupplementPlan? {
+    nonisolated var supplementPlan: SupplementPlan? {
         get {
             guard let data = supplementPlanData else { return nil }
             return try? JSONDecoder().decode(SupplementPlan.self, from: data)
@@ -61,9 +61,9 @@ final class HealthRecommendation {
             supplementPlanData = try? JSONEncoder().encode(newValue)
         }
     }
-    
+
     /// Decoded workout plan
-    var workoutPlan: WorkoutPlan? {
+    nonisolated var workoutPlan: WorkoutPlan? {
         get {
             guard let data = workoutPlanData else { return nil }
             return try? JSONDecoder().decode(WorkoutPlan.self, from: data)
@@ -72,9 +72,9 @@ final class HealthRecommendation {
             workoutPlanData = try? JSONEncoder().encode(newValue)
         }
     }
-    
+
     /// Decoded diet plan
-    var dietPlan: DietPlan? {
+    nonisolated var dietPlan: DietPlan? {
         get {
             guard let data = dietPlanData else { return nil }
             return try? JSONDecoder().decode(DietPlan.self, from: data)
@@ -83,9 +83,9 @@ final class HealthRecommendation {
             dietPlanData = try? JSONEncoder().encode(newValue)
         }
     }
-    
+
     // MARK: - Initialization
-    
+
     init(
         status: RecommendationStatus = .pending,
         healthSummary: String = "",
@@ -106,7 +106,7 @@ final class HealthRecommendation {
         self.disclaimers = disclaimers
         self.suggestedReviewWeeks = suggestedReviewWeeks
     }
-    
+
     /// Update timestamp
     func markUpdated() {
         updatedAt = Date()

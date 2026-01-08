@@ -121,22 +121,28 @@ struct DashboardView: View {
     
     // MARK: - API Key Warning
     
+    @EnvironmentObject private var aiSettings: AISettings
+    
     private var apiKeyWarning: some View {
         VStack(spacing: 12) {
             HStack {
                 Image(systemName: "key.fill")
                     .foregroundColor(.orange)
-                Text("API Key Required")
+                Text("AI Provider Not Configured")
                     .font(.headline)
             }
             
-            Text("To generate personalized recommendations, please add your Anthropic API key.")
+            Text("Configure \(aiSettings.selectedProvider.rawValue) to generate personalized recommendations.")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
+            Text(aiSettings.selectedProvider.setupInstructions)
+                .font(.caption)
+                .foregroundColor(.secondary)
+            
             Button(action: { showAPIKeySheet = true }) {
-                Text("Add API Key")
+                Text("Configure AI Provider")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .padding(.horizontal, 20)
@@ -393,93 +399,280 @@ struct PlanSummaryCard: View {
 
 struct APIKeySettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var apiKey = ""
-    @State private var showKey = false
-    @State private var saveSuccess = false
+    @EnvironmentObject private var aiSettings: AISettings
+    
+    // API Keys for each provider
+    @State private var claudeAPIKey = ""
+    @State private var openAIAPIKey = ""
+    @State private var showClaudeKey = false
+    @State private var showOpenAIKey = false
+    @State private var saveSuccess: AIProvider? = nil
     
     private let keychainService = KeychainService.shared
     
     var body: some View {
         NavigationStack {
             Form {
+                // Provider Selection
                 Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Anthropic API Key")
-                            .font(.headline)
-                        
-                        Text("Your API key is stored securely in the device keychain and never sent to any server except Anthropic.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    Picker("AI Provider", selection: $aiSettings.selectedProvider) {
+                        ForEach(AIProvider.allCases) { provider in
+                            HStack {
+                                Image(systemName: provider.icon)
+                                Text(provider.rawValue)
+                            }
+                            .tag(provider)
+                        }
                     }
                     
-                    HStack {
-                        if showKey {
-                            TextField("sk-ant-...", text: $apiKey)
-                                .textContentType(.password)
-                                .autocorrectionDisabled()
-                        } else {
-                            SecureField("sk-ant-...", text: $apiKey)
-                                .textContentType(.password)
-                        }
-                        
-                        Button(action: { showKey.toggle() }) {
-                            Image(systemName: showKey ? "eye.slash" : "eye")
-                                .foregroundColor(.secondary)
+                    // Model Selection
+                    Picker("Model", selection: $aiSettings.selectedModel) {
+                        ForEach(aiSettings.selectedProvider.availableModels, id: \.self) { model in
+                            Text(model).tag(model)
                         }
                     }
                 } header: {
-                    Text("API Configuration")
+                    Text("AI Provider")
                 } footer: {
-                    Text("Get your API key from console.anthropic.com")
+                    Text(aiSettings.selectedProvider.description)
                 }
                 
+                // Claude Configuration
                 Section {
-                    Button(action: saveAPIKey) {
+                    VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("Save API Key")
+                            Image(systemName: AIProvider.claude.icon)
+                                .foregroundColor(.purple)
+                            Text("Claude (Anthropic)")
+                                .font(.headline)
                             Spacer()
-                            if saveSuccess {
+                            if keychainService.hasAPIKey(for: .claude) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(.green)
                             }
                         }
                     }
-                    .disabled(apiKey.isEmpty)
                     
-                    if keychainService.hasAPIKey(for: .claude) {
-                        Button(role: .destructive, action: deleteAPIKey) {
-                            Text("Remove API Key")
+                    HStack {
+                        if showClaudeKey {
+                            TextField("sk-ant-...", text: $claudeAPIKey)
+                                .textContentType(.password)
+                                .autocorrectionDisabled()
+                        } else {
+                            SecureField("sk-ant-...", text: $claudeAPIKey)
+                                .textContentType(.password)
+                        }
+                        
+                        Button(action: { showClaudeKey.toggle() }) {
+                            Image(systemName: showClaudeKey ? "eye.slash" : "eye")
+                                .foregroundColor(.secondary)
                         }
                     }
+                    
+                    HStack {
+                        Button(action: { saveAPIKey(for: .claude, key: claudeAPIKey) }) {
+                            Text("Save")
+                        }
+                        .disabled(claudeAPIKey.isEmpty)
+                        
+                        if saveSuccess == .claude {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                        }
+                        
+                        Spacer()
+                        
+                        if keychainService.hasAPIKey(for: .claude) {
+                            Button(role: .destructive, action: { deleteAPIKey(for: .claude) }) {
+                                Text("Remove")
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Claude API Key")
+                } footer: {
+                    Text("Get your API key from console.anthropic.com")
+                }
+                
+                // OpenAI Configuration
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: AIProvider.openAI.icon)
+                                .foregroundColor(.green)
+                            Text("GPT (OpenAI)")
+                                .font(.headline)
+                            Spacer()
+                            if keychainService.hasAPIKey(for: .openAI) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            }
+                        }
+                    }
+                    
+                    HStack {
+                        if showOpenAIKey {
+                            TextField("sk-...", text: $openAIAPIKey)
+                                .textContentType(.password)
+                                .autocorrectionDisabled()
+                        } else {
+                            SecureField("sk-...", text: $openAIAPIKey)
+                                .textContentType(.password)
+                        }
+                        
+                        Button(action: { showOpenAIKey.toggle() }) {
+                            Image(systemName: showOpenAIKey ? "eye.slash" : "eye")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    HStack {
+                        Button(action: { saveAPIKey(for: .openAI, key: openAIAPIKey) }) {
+                            Text("Save")
+                        }
+                        .disabled(openAIAPIKey.isEmpty)
+                        
+                        if saveSuccess == .openAI {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                        }
+                        
+                        Spacer()
+                        
+                        if keychainService.hasAPIKey(for: .openAI) {
+                            Button(role: .destructive, action: { deleteAPIKey(for: .openAI) }) {
+                                Text("Remove")
+                            }
+                        }
+                    }
+                } header: {
+                    Text("OpenAI API Key")
+                } footer: {
+                    Text("Get your API key from platform.openai.com")
+                }
+                
+                // Gemini/Firebase Configuration
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: AIProvider.gemini.icon)
+                                .foregroundColor(.blue)
+                            Text("Gemini (Google/Firebase)")
+                                .font(.headline)
+                            Spacer()
+                            if GeminiAIService.isFirebaseConfigured {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            } else {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.red)
+                            }
+                        }
+                    }
+                    
+                    if GeminiAIService.isFirebaseConfigured {
+                        Text("Firebase is configured and ready to use.")
+                            .font(.caption)
+                            .foregroundColor(.green)
+                    } else {
+                        Text("Add GoogleService-Info.plist to your Xcode project to enable Gemini.")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                } header: {
+                    Text("Gemini Configuration")
+                } footer: {
+                    Text("Gemini uses Firebase AI Logic. Configure your Firebase project at console.firebase.google.com")
+                }
+                
+                // Status Summary
+                Section {
+                    HStack {
+                        Text("Available Providers")
+                        Spacer()
+                        Text("\(AIServiceFactory.availableProviders().count)")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    ForEach(AIProvider.allCases) { provider in
+                        HStack {
+                            Image(systemName: provider.icon)
+                                .foregroundColor(isProviderConfigured(provider) ? .green : .gray)
+                            Text(provider.rawValue)
+                            Spacer()
+                            if isProviderConfigured(provider) {
+                                Text("Ready")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            } else {
+                                Text("Not Configured")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Status")
                 }
             }
-            .navigationTitle("Settings")
+            .navigationTitle("AI Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }
             .onAppear {
-                if let existingKey = keychainService.getAPIKey(for: .claude) {
-                    apiKey = existingKey
+                loadExistingKeys()
+            }
+            .onChange(of: aiSettings.selectedProvider) { _, newProvider in
+                // Update model to provider's default if current model isn't available
+                if !newProvider.availableModels.contains(aiSettings.selectedModel) {
+                    aiSettings.selectedModel = newProvider.defaultModel
                 }
             }
         }
     }
     
-    private func saveAPIKey() {
-        if keychainService.saveAPIKey(apiKey, for: .claude) {
-            saveSuccess = true
+    private func loadExistingKeys() {
+        if let key = keychainService.getAPIKey(for: .claude) {
+            claudeAPIKey = key
+        }
+        if let key = keychainService.getAPIKey(for: .openAI) {
+            openAIAPIKey = key
+        }
+    }
+    
+    private func saveAPIKey(for provider: AIProvider, key: String) {
+        if keychainService.saveAPIKey(key, for: provider) {
+            saveSuccess = provider
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                saveSuccess = false
+                saveSuccess = nil
             }
         }
     }
     
-    private func deleteAPIKey() {
-        keychainService.deleteAPIKey(for: .claude)
-        apiKey = ""
+    private func deleteAPIKey(for provider: AIProvider) {
+        keychainService.deleteAPIKey(for: provider)
+        switch provider {
+        case .claude:
+            claudeAPIKey = ""
+        case .openAI:
+            openAIAPIKey = ""
+        case .gemini:
+            break // Gemini doesn't use API key
+        }
+    }
+    
+    private func isProviderConfigured(_ provider: AIProvider) -> Bool {
+        switch provider {
+        case .claude:
+            return keychainService.hasAPIKey(for: .claude)
+        case .openAI:
+            return keychainService.hasAPIKey(for: .openAI)
+        case .gemini:
+            return GeminiAIService.isFirebaseConfigured
+        }
     }
 }
 

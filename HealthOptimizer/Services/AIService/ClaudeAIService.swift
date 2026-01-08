@@ -21,6 +21,7 @@ final class ClaudeAIService: AIServiceProtocol {
     private let promptBuilder: AIPromptBuilder
 
     var providerName: String { "Claude (Anthropic)" }
+    var provider: AIProvider { .claude }
 
     var isConfigured: Bool {
         keychainService.getAPIKey(for: .claude) != nil

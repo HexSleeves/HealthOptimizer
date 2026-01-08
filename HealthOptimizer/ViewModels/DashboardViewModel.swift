@@ -29,16 +29,17 @@ final class DashboardViewModel {
     
     // MARK: - Dependencies
     
-    private let aiService: AIServiceProtocol
+    private var aiService: AIServiceProtocol
     private let persistenceService: PersistenceService
     
     // MARK: - Initialization
     
     init(
-        aiService: AIServiceProtocol = AIServiceFactory.createDefault(),
+        aiService: AIServiceProtocol? = nil,
         persistenceService: PersistenceService = .shared
     ) {
-        self.aiService = aiService
+        // Use provided service or get from settings
+        self.aiService = aiService ?? AISettings.shared.currentService()
         self.persistenceService = persistenceService
     }
     
@@ -49,7 +50,12 @@ final class DashboardViewModel {
     }
     
     var isAIConfigured: Bool {
-        aiService.isConfigured
+        // Check if currently selected provider is configured
+        AISettings.shared.isCurrentProviderConfigured
+    }
+    
+    var currentProviderName: String {
+        AISettings.shared.selectedProvider.rawValue
     }
     
     var recommendationAge: String? {
@@ -80,7 +86,11 @@ final class DashboardViewModel {
     
     /// Generate new health recommendations using AI
     func generateRecommendations() async {
-        print("Generating recommendations...")
+        // Refresh AI service in case provider changed
+        aiService = AISettings.shared.currentService()
+        
+        let providerName = aiService.providerName
+        print("[HealthOptimizer] Generating recommendations using \(providerName)...")
         
         guard let profile = userProfile else {
             error = .invalidResponse
@@ -234,10 +244,11 @@ extension DashboardViewModel {
 
 // MARK: - Mock AI Service
 
-/// Mock AI service for previews
-private final class MockAIService: AIServiceProtocol {
+/// Mock AI service for previews and testing
+final class MockAIService: AIServiceProtocol {
     var isConfigured: Bool { true }
     var providerName: String { "Mock" }
+    var provider: AIProvider { .claude }
     
     func generateRecommendations(for profile: UserProfile) async throws -> AIHealthRecommendationResponse {
         // Simulate network delay
