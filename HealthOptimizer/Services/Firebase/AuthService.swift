@@ -42,8 +42,13 @@ final class AuthService {
   /// Current nonce for Sign in with Apple
   private var currentNonce: String?
 
-  /// Auth state listener handle
-  private var authStateHandle: AuthStateDidChangeListenerHandle?
+  /// Auth state listener handle - nonisolated for deinit access
+  private nonisolated(unsafe) var _authStateHandle: AuthStateDidChangeListenerHandle?
+
+  private var authStateHandle: AuthStateDidChangeListenerHandle? {
+    get { _authStateHandle }
+    set { _authStateHandle = newValue }
+  }
 
   // MARK: - Initialization
 
@@ -52,7 +57,7 @@ final class AuthService {
   }
 
   deinit {
-    if let handle = authStateHandle {
+    if let handle = _authStateHandle {
       Auth.auth().removeStateDidChangeListener(handle)
     }
   }
