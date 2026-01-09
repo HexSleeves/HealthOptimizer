@@ -139,6 +139,9 @@ final class DashboardViewModel {
       // Prune old recommendations
       try persistenceService.pruneOldRecommendations(keepLast: 5)
 
+      // Sync to cloud
+      await SyncService.shared.syncRecommendation(recommendation)
+
       generationProgress = "Complete!"
 
     } catch let serviceError as AIServiceError {

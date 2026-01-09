@@ -15,10 +15,16 @@ struct ProfileView: View {
   @Environment(\.modelContext) private var modelContext
   @Query private var userProfiles: [UserProfile]
 
+  @State private var authService = AuthService.shared
+  @State private var syncService = SyncService.shared
+
   @State private var showAPISettings = false
   @State private var showDeleteConfirmation = false
+  @State private var showSignOutConfirmation = false
+  @State private var showDeleteAccountConfirmation = false
   @State private var showExportSheet = false
   @State private var exportData: Data?
+  @State private var clearDataOnSignOut = false
 
   private var profile: UserProfile? {
     userProfiles.first
@@ -27,9 +33,9 @@ struct ProfileView: View {
   var body: some View {
     NavigationStack {
       List {
-        if let profile = profile {
-          // Profile Summary
-          Section {
+        // Account Section
+        Section {
+          if let user = authService.currentUser {
             HStack(spacing: 16) {
               // Avatar
               ZStack {
@@ -43,26 +49,34 @@ struct ProfileView: View {
                   )
                   .frame(width: 60, height: 60)
 
-                Text(profile.displayName?.prefix(1).uppercased() ?? "U")
+                Text(profile?.displayName?.prefix(1).uppercased() ?? user.email?.prefix(1).uppercased() ?? "U")
                   .font(.title2)
                   .fontWeight(.bold)
                   .foregroundColor(.white)
               }
 
               VStack(alignment: .leading, spacing: 4) {
-                Text(profile.displayName ?? "Health Optimizer User")
+                Text(profile?.displayName ?? "Health Optimizer User")
                   .font(.headline)
 
-                Text(
-                  "Member since \(profile.createdAt.formatted(date: .abbreviated, time: .omitted))"
-                )
-                .font(.caption)
-                .foregroundColor(.secondary)
+                if let email = user.email {
+                  Text(email)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                }
+
+                if let createdAt = profile?.createdAt {
+                  Text("Member since \(createdAt.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                }
               }
             }
             .padding(.vertical, 8)
           }
+        }
 
+        if let profile = profile {
           // Health Stats
           Section("Health Statistics") {
             StatRow(label: "Age", value: "\(profile.age) years")
@@ -102,10 +116,38 @@ struct ProfileView: View {
           }
         }
 
+        // Sync Status
+        Section("Sync") {
+          HStack {
+            Label("Cloud Sync", systemImage: "icloud.fill")
+            Spacer()
+            if syncService.isSyncing {
+              ProgressView()
+            } else if let lastSync = syncService.lastSyncDate {
+              Text("Last: \(lastSync.formatted(date: .omitted, time: .shortened))")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            } else {
+              Text("Not synced")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            }
+          }
+
+          Button(action: {
+            Task {
+              await syncService.performFullSync()
+            }
+          }) {
+            Label("Sync Now", systemImage: "arrow.triangle.2.circlepath")
+          }
+          .disabled(syncService.isSyncing)
+        }
+
         // Settings
         Section("Settings") {
           Button(action: { showAPISettings = true }) {
-            Label("API Configuration", systemImage: "key.fill")
+            Label("AI Configuration", systemImage: "key.fill")
           }
 
           NavigationLink {
@@ -123,6 +165,17 @@ struct ProfileView: View {
 
           Button(role: .destructive, action: { showDeleteConfirmation = true }) {
             Label("Delete All Data", systemImage: "trash")
+          }
+        }
+
+        // Account
+        Section("Account") {
+          Button(action: { showSignOutConfirmation = true }) {
+            Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+          }
+
+          Button(role: .destructive, action: { showDeleteAccountConfirmation = true }) {
+            Label("Delete Account", systemImage: "person.crop.circle.badge.xmark")
           }
         }
 
@@ -150,6 +203,27 @@ struct ProfileView: View {
           "This will permanently delete your profile and all recommendations. This cannot be undone."
         )
       }
+      .confirmationDialog("Sign Out", isPresented: $showSignOutConfirmation) {
+        Button("Sign Out (Keep Data)") {
+          signOut(clearData: false)
+        }
+        Button("Sign Out & Clear Data", role: .destructive) {
+          signOut(clearData: true)
+        }
+        Button("Cancel", role: .cancel) {}
+      } message: {
+        Text("Your data is saved in the cloud and will sync when you sign back in.")
+      }
+      .alert("Delete Account?", isPresented: $showDeleteAccountConfirmation) {
+        Button("Cancel", role: .cancel) {}
+        Button("Delete Account", role: .destructive) {
+          deleteAccount()
+        }
+      } message: {
+        Text(
+          "This will permanently delete your account and all data from both your device and the cloud. This cannot be undone."
+        )
+      }
       .sheet(isPresented: $showExportSheet) {
         if let data = exportData {
           ShareSheet(data: data)
@@ -175,9 +249,25 @@ struct ProfileView: View {
     Task { @MainActor in
       do {
         try PersistenceService.shared.deleteAllData()
+        try await FirestoreService.shared.deleteAllUserData()
         KeychainService.shared.deleteAPIKey(for: .claude)
       } catch {
         print("Delete error: \(error)")
+      }
+    }
+  }
+
+  private func signOut(clearData: Bool) {
+    syncService.handleSignOut(clearLocalData: clearData)
+    try? authService.signOut()
+  }
+
+  private func deleteAccount() {
+    Task {
+      do {
+        try await syncService.handleAccountDeletion()
+      } catch {
+        print("Delete account error: \(error)")
       }
     }
   }
@@ -219,15 +309,15 @@ struct PrivacyInfoView: View {
       Section("Data Storage") {
         PrivacyRow(
           icon: "iphone",
-          title: "Local Storage Only",
+          title: "Local Storage",
           description:
-            "All your health data is stored locally on your device using encrypted storage."
+            "Your health data is stored locally on your device using encrypted storage."
         )
 
         PrivacyRow(
-          icon: "icloud.slash",
-          title: "No Cloud Sync",
-          description: "Your health data is never uploaded to any cloud service or external server."
+          icon: "icloud.fill",
+          title: "Cloud Sync",
+          description: "Data syncs to Firebase when signed in, enabling multi-device access and backup."
         )
       }
 
@@ -257,7 +347,7 @@ struct PrivacyInfoView: View {
         PrivacyRow(
           icon: "trash",
           title: "Data Deletion",
-          description: "Permanently delete all your data whenever you choose."
+          description: "Permanently delete all your data from device and cloud whenever you choose."
         )
       }
 
