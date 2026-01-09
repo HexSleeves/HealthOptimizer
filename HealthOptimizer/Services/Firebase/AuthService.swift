@@ -65,8 +65,10 @@ final class AuthService {
   // MARK: - Auth State Listener
 
   private func setupAuthStateListener() {
-    authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, user in
+    authStateHandle = Auth.auth().addStateDidChangeListener { [weak self] _, _ in
+      // Fetch user on MainActor to avoid Sendable issues
       Task { @MainActor in
+        let user = Auth.auth().currentUser
         self?.currentUser = user
         if let user = user {
           print("[AuthService] User signed in: \(user.uid)")
@@ -200,7 +202,7 @@ final class AuthService {
 
   /// Delete current user account
   func deleteAccount() async throws {
-    guard let user = currentUser else {
+    guard currentUser != nil else {
       throw AuthError.notSignedIn
     }
 
@@ -210,6 +212,10 @@ final class AuthService {
     defer { isLoading = false }
 
     do {
+      // Get user directly from Auth to avoid Sendable issues
+      guard let user = Auth.auth().currentUser else {
+        throw AuthError.notSignedIn
+      }
       try await user.delete()
       print("[AuthService] Account deleted successfully")
     } catch {
