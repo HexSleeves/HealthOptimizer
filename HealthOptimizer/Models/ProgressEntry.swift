@@ -48,19 +48,3 @@ final class ProgressEntry {
     self.createdAt = Date()
   }
 }
-
-// MARK: - Current Supplement
-
-/// A supplement the user is currently taking
-struct CurrentSupplement: Codable, Sendable, Identifiable {
-  var id: UUID = UUID()
-  var name: String
-  var dosage: String?
-  var frequency: String?
-
-  init(name: String, dosage: String? = nil, frequency: String? = nil) {
-    self.name = name
-    self.dosage = dosage
-    self.frequency = frequency
-  }
-}

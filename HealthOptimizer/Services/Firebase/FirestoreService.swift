@@ -259,8 +259,8 @@ final class FirestoreService {
   private func encodeMedication(_ med: Medication) -> [String: Any] {
     return [
       "name": med.name,
-      "dosage": med.dosage as Any,
-      "frequency": med.frequency as Any,
+      "dosage": med.dosage,
+      "frequency": med.frequency.rawValue,
       "purpose": med.purpose as Any
     ]
   }
@@ -268,8 +268,8 @@ final class FirestoreService {
   private func encodeSupplement(_ supp: CurrentSupplement) -> [String: Any] {
     return [
       "name": supp.name,
-      "dosage": supp.dosage as Any,
-      "frequency": supp.frequency as Any
+      "dosage": supp.dosage,
+      "frequency": supp.frequency.rawValue
     ]
   }
 
@@ -379,8 +379,8 @@ final class FirestoreService {
   private func decodeMedication(_ data: [String: Any]) -> Medication {
     Medication(
       name: data["name"] as? String ?? "",
-      dosage: data["dosage"] as? String,
-      frequency: data["frequency"] as? String,
+      dosage: data["dosage"] as? String ?? "",
+      frequency: MedicationFrequency(rawValue: data["frequency"] as? String ?? "") ?? .daily,
       purpose: data["purpose"] as? String
     )
   }
@@ -388,8 +388,8 @@ final class FirestoreService {
   private func decodeSupplement(_ data: [String: Any]) -> CurrentSupplement {
     CurrentSupplement(
       name: data["name"] as? String ?? "",
-      dosage: data["dosage"] as? String,
-      frequency: data["frequency"] as? String
+      dosage: data["dosage"] as? String ?? "",
+      frequency: MedicationFrequency(rawValue: data["frequency"] as? String ?? "") ?? .daily
     )
   }
 
