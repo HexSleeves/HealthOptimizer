@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		6C1709692F101D190079FBA2 /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = 6C1709682F101D190079FBA2 /* OpenAI */; };
+		6C17097E2F10290F0079FBA2 /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 6C17097D2F10290F0079FBA2 /* FirebaseAI */; };
+		6C1709802F10290F0079FBA2 /* FirebaseAILogic in Frameworks */ = {isa = PBXBuildFile; productRef = 6C17097F2F10290F0079FBA2 /* FirebaseAILogic */; };
+		6C1709822F10290F0079FBA2 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 6C1709812F10290F0079FBA2 /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +30,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6C1709802F10290F0079FBA2 /* FirebaseAILogic in Frameworks */,
 				6C1709692F101D190079FBA2 /* OpenAI in Frameworks */,
+				6C1709822F10290F0079FBA2 /* FirebaseCore in Frameworks */,
+				6C17097E2F10290F0079FBA2 /* FirebaseAI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -38,6 +44,7 @@
 			isa = PBXGroup;
 			children = (
 				6C1709062F100E780079FBA2 /* HealthOptimizer */,
+				6C17097C2F10290F0079FBA2 /* Frameworks */,
 				6C1709052F100E780079FBA2 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -48,6 +55,13 @@
 				6C1709042F100E780079FBA2 /* HealthOptimizer.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6C17097C2F10290F0079FBA2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -71,6 +85,9 @@
 			name = HealthOptimizer;
 			packageProductDependencies = (
 				6C1709682F101D190079FBA2 /* OpenAI */,
+				6C17097D2F10290F0079FBA2 /* FirebaseAI */,
+				6C17097F2F10290F0079FBA2 /* FirebaseAILogic */,
+				6C1709812F10290F0079FBA2 /* FirebaseCore */,
 			);
 			productName = HealthOptimizer;
 			productReference = 6C1709042F100E780079FBA2 /* HealthOptimizer.app */;
@@ -290,7 +307,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
@@ -335,7 +352,7 @@
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2,7";
 				XROS_DEPLOYMENT_TARGET = 26.2;
 			};
@@ -388,6 +405,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 6C1709672F101D190079FBA2 /* XCRemoteSwiftPackageReference "OpenAI" */;
 			productName = OpenAI;
+		};
+		6C17097D2F10290F0079FBA2 /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C1709662F101CD90079FBA2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
+		};
+		6C17097F2F10290F0079FBA2 /* FirebaseAILogic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C1709662F101CD90079FBA2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAILogic;
+		};
+		6C1709812F10290F0079FBA2 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 6C1709662F101CD90079FBA2 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
