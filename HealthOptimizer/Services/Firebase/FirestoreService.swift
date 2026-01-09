@@ -312,10 +312,14 @@ final class FirestoreService {
       "date": Timestamp(date: entry.date),
       "weight": entry.weight as Any,
       "bodyFatPercentage": entry.bodyFatPercentage as Any,
+      "waistCircumference": entry.waistCircumference as Any,
       "notes": entry.notes as Any,
       "mood": entry.mood as Any,
       "energyLevel": entry.energyLevel as Any,
-      "sleepHours": entry.sleepHours as Any
+      "sleepHours": entry.sleepHours as Any,
+      "workoutsCompleted": entry.workoutsCompleted as Any,
+      "supplementsAdherence": entry.supplementsAdherence as Any,
+      "dietAdherence": entry.dietAdherence as Any
     ]
   }
 
@@ -445,10 +449,14 @@ final class FirestoreService {
       date: (data["date"] as? Timestamp)?.dateValue() ?? Date(),
       weight: data["weight"] as? Double,
       bodyFatPercentage: data["bodyFatPercentage"] as? Double,
+      waistCircumference: data["waistCircumference"] as? Double,
       notes: data["notes"] as? String,
-      mood: data["mood"] as? String,
+      mood: data["mood"] as? Int,
       energyLevel: data["energyLevel"] as? Int,
-      sleepHours: data["sleepHours"] as? Double
+      sleepHours: data["sleepHours"] as? Double,
+      workoutsCompleted: data["workoutsCompleted"] as? Int,
+      supplementsAdherence: data["supplementsAdherence"] as? Int,
+      dietAdherence: data["dietAdherence"] as? Int
     )
   }
 }
@@ -544,8 +552,12 @@ struct ProgressEntryDTO {
   var date: Date
   var weight: Double?
   var bodyFatPercentage: Double?
+  var waistCircumference: Double?
   var notes: String?
-  var mood: String?
-  var energyLevel: Int?
+  var mood: Int?  // 1-5 scale
+  var energyLevel: Int?  // 1-5 scale
   var sleepHours: Double?
+  var workoutsCompleted: Int?
+  var supplementsAdherence: Int?  // 0-100 percentage
+  var dietAdherence: Int?  // 0-100 percentage
 }
