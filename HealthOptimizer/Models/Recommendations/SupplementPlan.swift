@@ -18,6 +18,10 @@ struct SupplementPlan: Identifiable, Sendable, nonisolated Codable {
   var interactionNotes: [String]
   var createdAt: Date
 
+  enum CodingKeys: String, CodingKey {
+    case id, supplements, generalGuidelines, warnings, interactionNotes, createdAt
+  }
+
   init(
     id: UUID = UUID(),
     supplements: [SupplementRecommendation] = [],
@@ -32,6 +36,35 @@ struct SupplementPlan: Identifiable, Sendable, nonisolated Codable {
     self.warnings = warnings
     self.interactionNotes = interactionNotes
     self.createdAt = createdAt
+  }
+
+  // Custom decoder to handle flexible types from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    supplements = try container.decodeIfPresent([SupplementRecommendation].self, forKey: .supplements) ?? []
+    generalGuidelines = try container.decodeIfPresent(String.self, forKey: .generalGuidelines) ?? ""
+
+    // Handle warnings as array or single string
+    if let warningsArray = try? container.decode([String].self, forKey: .warnings) {
+      warnings = warningsArray
+    } else if let warningsString = try? container.decode(String.self, forKey: .warnings) {
+      warnings = [warningsString]
+    } else {
+      warnings = []
+    }
+
+    // Handle interactionNotes as array or single string
+    if let notesArray = try? container.decode([String].self, forKey: .interactionNotes) {
+      interactionNotes = notesArray
+    } else if let notesString = try? container.decode(String.self, forKey: .interactionNotes) {
+      interactionNotes = [notesString]
+    } else {
+      interactionNotes = []
+    }
+
+    createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
   }
 
   /// Group supplements by timing for display
@@ -108,25 +141,14 @@ struct SupplementRecommendation: Codable, Identifiable, Sendable {
     self.duration = duration
   }
 
-  // Custom decoding to handle dosage as either String or Number
+  // Custom decoding to handle flexible types from AI
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
     id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
     name = try container.decode(String.self, forKey: .name)
-    alternateNames = try container.decodeIfPresent([String].self, forKey: .alternateNames) ?? []
-
-    // Handle dosage as String or Number
-    if let dosageString = try? container.decode(String.self, forKey: .dosage) {
-      dosage = dosageString
-    } else if let dosageInt = try? container.decode(Int.self, forKey: .dosage) {
-      dosage = String(dosageInt)
-    } else if let dosageDouble = try? container.decode(Double.self, forKey: .dosage) {
-      dosage = String(dosageDouble)
-    } else {
-      dosage = ""
-    }
-
+    alternateNames = AIJSONCoding.decodeStringArray(from: container, forKey: CodingKeys.alternateNames)
+    dosage = AIJSONCoding.decodeString(from: container, forKey: CodingKeys.dosage)
     unit = try container.decodeIfPresent(String.self, forKey: .unit) ?? "mg"
     timing = try container.decodeIfPresent(SupplementTiming.self, forKey: .timing) ?? .morning
     frequency = try container.decodeIfPresent(SupplementFrequency.self, forKey: .frequency) ?? .daily
@@ -134,10 +156,10 @@ struct SupplementRecommendation: Codable, Identifiable, Sendable {
     priority = try container.decodeIfPresent(SupplementPriority.self, forKey: .priority) ?? .recommended
     reasoning = try container.decodeIfPresent(String.self, forKey: .reasoning) ?? ""
     scientificBacking = try container.decodeIfPresent(String.self, forKey: .scientificBacking) ?? ""
-    benefits = try container.decodeIfPresent([String].self, forKey: .benefits) ?? []
-    potentialSideEffects = try container.decodeIfPresent([String].self, forKey: .potentialSideEffects) ?? []
-    interactions = try container.decodeIfPresent([String].self, forKey: .interactions) ?? []
-    contraindications = try container.decodeIfPresent([String].self, forKey: .contraindications) ?? []
+    benefits = AIJSONCoding.decodeStringArray(from: container, forKey: CodingKeys.benefits)
+    potentialSideEffects = AIJSONCoding.decodeStringArray(from: container, forKey: CodingKeys.potentialSideEffects)
+    interactions = AIJSONCoding.decodeStringArray(from: container, forKey: CodingKeys.interactions)
+    contraindications = AIJSONCoding.decodeStringArray(from: container, forKey: CodingKeys.contraindications)
     qualityNotes = try container.decodeIfPresent(String.self, forKey: .qualityNotes)
     estimatedMonthlyCost = try container.decodeIfPresent(String.self, forKey: .estimatedMonthlyCost)
     duration = try container.decodeIfPresent(String.self, forKey: .duration)

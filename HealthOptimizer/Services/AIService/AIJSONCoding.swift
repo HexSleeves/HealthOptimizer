@@ -92,6 +92,66 @@ nonisolated enum AIJSONCoding {
   }
   #endif
 
+  // MARK: - Flexible Array Decoding
+
+  /// Decode a value that may be a String array or a single String
+  static func decodeStringArray(
+    from container: KeyedDecodingContainer<some CodingKey>,
+    forKey key: some CodingKey
+  ) -> [String] {
+    if let array = try? container.decode([String].self, forKey: key) {
+      return array
+    } else if let string = try? container.decode(String.self, forKey: key) {
+      return [string]
+    }
+    return []
+  }
+
+  /// Decode a value that may be Int or String, returning Int
+  static func decodeInt(
+    from container: KeyedDecodingContainer<some CodingKey>,
+    forKey key: some CodingKey,
+    default defaultValue: Int
+  ) -> Int {
+    if let intValue = try? container.decode(Int.self, forKey: key) {
+      return intValue
+    } else if let stringValue = try? container.decode(String.self, forKey: key),
+              let intValue = Int(stringValue) {
+      return intValue
+    }
+    return defaultValue
+  }
+
+  /// Decode a value that may be Double or Int, returning Double
+  static func decodeDouble(
+    from container: KeyedDecodingContainer<some CodingKey>,
+    forKey key: some CodingKey,
+    default defaultValue: Double
+  ) -> Double {
+    if let doubleValue = try? container.decode(Double.self, forKey: key) {
+      return doubleValue
+    } else if let intValue = try? container.decode(Int.self, forKey: key) {
+      return Double(intValue)
+    }
+    return defaultValue
+  }
+
+  /// Decode a value that may be String, Int, or Double, returning String
+  static func decodeString(
+    from container: KeyedDecodingContainer<some CodingKey>,
+    forKey key: some CodingKey,
+    default defaultValue: String = ""
+  ) -> String {
+    if let stringValue = try? container.decode(String.self, forKey: key) {
+      return stringValue
+    } else if let intValue = try? container.decode(Int.self, forKey: key) {
+      return String(intValue)
+    } else if let doubleValue = try? container.decode(Double.self, forKey: key) {
+      return String(doubleValue)
+    }
+    return defaultValue
+  }
+
   private nonisolated enum ISO8601Parsing {
     static func parse(_ string: String) -> Date? {
       let withFractionalSeconds = ISO8601DateFormatter()
