@@ -264,6 +264,13 @@ struct Meal: Codable, Identifiable, Sendable {
   var mealPrepFriendly: Bool
   var tags: [String]  // e.g., "high-protein", "quick", "vegetarian"
 
+  enum CodingKeys: String, CodingKey {
+    case id, mealType, name, description, ingredients, instructions
+    case prepTimeMinutes, cookTimeMinutes, servings
+    case calories, protein, carbs, fat, fiber
+    case tips, substitutions, mealPrepFriendly, tags
+  }
+
   init(
     id: UUID = UUID(),
     mealType: MealType,
@@ -366,6 +373,10 @@ struct Ingredient: Codable, Identifiable, Sendable {
   var unit: String
   var notes: String?  // e.g., "diced", "room temperature"
   var isOptional: Bool
+
+  enum CodingKeys: String, CodingKey {
+    case id, name, amount, unit, notes, isOptional
+  }
 
   init(
     id: UUID = UUID(),

@@ -114,6 +114,12 @@ struct Exercise: Codable, Identifiable, Sendable {
   var isSuperset: Bool
   var supersetWith: String?  // Name of paired exercise
 
+  enum CodingKeys: String, CodingKey {
+    case id, name, muscleGroups, sets, reps, restSeconds
+    case weight, tempo, rpe, instructions, tips
+    case commonMistakes, alternatives, videoURL, isSuperset, supersetWith
+  }
+
   init(
     id: UUID = UUID(),
     name: String,
