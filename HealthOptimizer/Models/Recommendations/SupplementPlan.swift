@@ -42,7 +42,7 @@ struct SupplementPlan: Identifiable, Sendable, nonisolated Codable {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
     supplements = try container.decodeIfPresent([SupplementRecommendation].self, forKey: .supplements) ?? []
     generalGuidelines = try container.decodeIfPresent(String.self, forKey: .generalGuidelines) ?? ""
 
@@ -145,7 +145,7 @@ struct SupplementRecommendation: Codable, Identifiable, Sendable {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
     name = try container.decode(String.self, forKey: .name)
     alternateNames = AIJSONCoding.decodeStringArray(from: container, forKey: CodingKeys.alternateNames)
     dosage = AIJSONCoding.decodeString(from: container, forKey: CodingKeys.dosage)

@@ -152,6 +152,25 @@ nonisolated enum AIJSONCoding {
     return defaultValue
   }
 
+  /// Decode a UUID that may be invalid (AI sometimes generates non-hex characters)
+  /// Returns a new UUID if the value is missing or invalid
+  static func decodeUUID<K: CodingKey>(
+    from container: KeyedDecodingContainer<K>,
+    forKey key: K
+  ) -> UUID {
+    // First try standard UUID decoding
+    if let uuid = try? container.decode(UUID.self, forKey: key) {
+      return uuid
+    }
+    // If that fails, try to decode as string and parse
+    if let string = try? container.decode(String.self, forKey: key),
+       let uuid = UUID(uuidString: string) {
+      return uuid
+    }
+    // Fall back to generating a new UUID
+    return UUID()
+  }
+
   private nonisolated enum ISO8601Parsing {
     static func parse(_ string: String) -> Date? {
       let withFractionalSeconds = ISO8601DateFormatter()

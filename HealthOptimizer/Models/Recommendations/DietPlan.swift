@@ -26,6 +26,12 @@ struct DietPlan: nonisolated Codable, Identifiable, Sendable {
   var snackingGuidelines: String
   var createdAt: Date
 
+  enum CodingKeys: String, CodingKey {
+    case id, name, description, dailyCalories, macros, mealSchedule
+    case sampleMealPlan, generalGuidelines, foodsToInclude, foodsToLimit
+    case hydrationGuidelines, mealTimingGuidelines, snackingGuidelines, createdAt
+  }
+
   init(
     id: UUID = UUID(),
     name: String = "Custom Diet Plan",
@@ -56,6 +62,26 @@ struct DietPlan: nonisolated Codable, Identifiable, Sendable {
     self.mealTimingGuidelines = mealTimingGuidelines
     self.snackingGuidelines = snackingGuidelines
     self.createdAt = createdAt
+  }
+
+  // Custom decoder to handle invalid UUIDs from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
+    name = try container.decodeIfPresent(String.self, forKey: .name) ?? "Custom Diet Plan"
+    description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+    dailyCalories = AIJSONCoding.decodeInt(from: container, forKey: .dailyCalories, default: 2000)
+    macros = try container.decodeIfPresent(MacroTargets.self, forKey: .macros) ?? MacroTargets()
+    mealSchedule = try container.decodeIfPresent([MealTemplate].self, forKey: .mealSchedule) ?? []
+    sampleMealPlan = try container.decodeIfPresent([DayMealPlan].self, forKey: .sampleMealPlan) ?? []
+    generalGuidelines = try container.decodeIfPresent([String].self, forKey: .generalGuidelines) ?? []
+    foodsToInclude = try container.decodeIfPresent([String].self, forKey: .foodsToInclude) ?? []
+    foodsToLimit = try container.decodeIfPresent([String].self, forKey: .foodsToLimit) ?? []
+    hydrationGuidelines = try container.decodeIfPresent(String.self, forKey: .hydrationGuidelines) ?? ""
+    mealTimingGuidelines = try container.decodeIfPresent(String.self, forKey: .mealTimingGuidelines) ?? ""
+    snackingGuidelines = try container.decodeIfPresent(String.self, forKey: .snackingGuidelines) ?? ""
+    createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
   }
 }
 
@@ -114,6 +140,11 @@ struct MealTemplate: Codable, Identifiable, Sendable {
   var suggestedTime: String
   var guidelines: String
 
+  enum CodingKeys: String, CodingKey {
+    case id, mealType, targetCalories, targetProtein, targetCarbs, targetFat
+    case suggestedTime, guidelines
+  }
+
   init(
     id: UUID = UUID(),
     mealType: MealType,
@@ -132,6 +163,20 @@ struct MealTemplate: Codable, Identifiable, Sendable {
     self.targetFat = targetFat
     self.suggestedTime = suggestedTime
     self.guidelines = guidelines
+  }
+
+  // Custom decoder to handle invalid UUIDs from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
+    mealType = try container.decode(MealType.self, forKey: .mealType)
+    targetCalories = AIJSONCoding.decodeInt(from: container, forKey: .targetCalories, default: 0)
+    targetProtein = AIJSONCoding.decodeInt(from: container, forKey: .targetProtein, default: 0)
+    targetCarbs = AIJSONCoding.decodeInt(from: container, forKey: .targetCarbs, default: 0)
+    targetFat = AIJSONCoding.decodeInt(from: container, forKey: .targetFat, default: 0)
+    suggestedTime = try container.decodeIfPresent(String.self, forKey: .suggestedTime) ?? ""
+    guidelines = try container.decodeIfPresent(String.self, forKey: .guidelines) ?? ""
   }
 }
 
@@ -218,6 +263,11 @@ struct DayMealPlan: Codable, Identifiable, Sendable {
   var totalFat: Int
   var notes: String?
 
+  enum CodingKeys: String, CodingKey {
+    case id, dayNumber, dayName, meals, totalCalories
+    case totalProtein, totalCarbs, totalFat, notes
+  }
+
   init(
     id: UUID = UUID(),
     dayNumber: Int,
@@ -238,6 +288,21 @@ struct DayMealPlan: Codable, Identifiable, Sendable {
     self.totalCarbs = totalCarbs
     self.totalFat = totalFat
     self.notes = notes
+  }
+
+  // Custom decoder to handle invalid UUIDs from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
+    dayNumber = AIJSONCoding.decodeInt(from: container, forKey: .dayNumber, default: 1)
+    dayName = try container.decodeIfPresent(String.self, forKey: .dayName) ?? ""
+    meals = try container.decodeIfPresent([Meal].self, forKey: .meals) ?? []
+    totalCalories = AIJSONCoding.decodeInt(from: container, forKey: .totalCalories, default: 0)
+    totalProtein = AIJSONCoding.decodeInt(from: container, forKey: .totalProtein, default: 0)
+    totalCarbs = AIJSONCoding.decodeInt(from: container, forKey: .totalCarbs, default: 0)
+    totalFat = AIJSONCoding.decodeInt(from: container, forKey: .totalFat, default: 0)
+    notes = try container.decodeIfPresent(String.self, forKey: .notes)
   }
 }
 
@@ -326,7 +391,7 @@ struct Meal: Codable, Identifiable, Sendable {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
     mealType = try container.decode(MealType.self, forKey: .mealType)
     name = try container.decode(String.self, forKey: .name)
     description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
@@ -398,7 +463,7 @@ struct Ingredient: Codable, Identifiable, Sendable {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
     name = try container.decode(String.self, forKey: .name)
 
     // Handle amount as Int or Double

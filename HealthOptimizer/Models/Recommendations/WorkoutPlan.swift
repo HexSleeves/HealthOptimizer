@@ -26,6 +26,13 @@ struct WorkoutPlan: nonisolated Codable, Identifiable, Sendable {
   var estimatedCaloriesBurnedPerSession: String
   var createdAt: Date
 
+  enum CodingKeys: String, CodingKey {
+    case id, name, description, durationWeeks, daysPerWeek, workoutDays
+    case restDayGuidelines, warmupGuidelines, cooldownGuidelines
+    case progressionNotes, equipmentNeeded, difficultyLevel
+    case estimatedCaloriesBurnedPerSession, createdAt
+  }
+
   init(
     id: UUID = UUID(),
     name: String = "Custom Workout Plan",
@@ -57,6 +64,26 @@ struct WorkoutPlan: nonisolated Codable, Identifiable, Sendable {
     self.estimatedCaloriesBurnedPerSession = estimatedCaloriesBurnedPerSession
     self.createdAt = createdAt
   }
+
+  // Custom decoder to handle invalid UUIDs from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
+    name = try container.decodeIfPresent(String.self, forKey: .name) ?? "Custom Workout Plan"
+    description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+    durationWeeks = AIJSONCoding.decodeInt(from: container, forKey: .durationWeeks, default: 8)
+    daysPerWeek = AIJSONCoding.decodeInt(from: container, forKey: .daysPerWeek, default: 4)
+    workoutDays = try container.decodeIfPresent([WorkoutDay].self, forKey: .workoutDays) ?? []
+    restDayGuidelines = try container.decodeIfPresent(String.self, forKey: .restDayGuidelines) ?? ""
+    warmupGuidelines = try container.decodeIfPresent(String.self, forKey: .warmupGuidelines) ?? ""
+    cooldownGuidelines = try container.decodeIfPresent(String.self, forKey: .cooldownGuidelines) ?? ""
+    progressionNotes = try container.decodeIfPresent(String.self, forKey: .progressionNotes) ?? ""
+    equipmentNeeded = try container.decodeIfPresent([String].self, forKey: .equipmentNeeded) ?? []
+    difficultyLevel = try container.decodeIfPresent(FitnessLevel.self, forKey: .difficultyLevel) ?? .intermediate
+    estimatedCaloriesBurnedPerSession = try container.decodeIfPresent(String.self, forKey: .estimatedCaloriesBurnedPerSession) ?? ""
+    createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+  }
 }
 
 // MARK: - Workout Day
@@ -71,6 +98,10 @@ struct WorkoutDay: Codable, Identifiable, Sendable {
   var exercises: [Exercise]
   var estimatedDuration: Int  // minutes
   var notes: String?
+
+  enum CodingKeys: String, CodingKey {
+    case id, dayNumber, name, focus, workoutType, exercises, estimatedDuration, notes
+  }
 
   init(
     id: UUID = UUID(),
@@ -90,6 +121,20 @@ struct WorkoutDay: Codable, Identifiable, Sendable {
     self.exercises = exercises
     self.estimatedDuration = estimatedDuration
     self.notes = notes
+  }
+
+  // Custom decoder to handle invalid UUIDs from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
+    dayNumber = AIJSONCoding.decodeInt(from: container, forKey: .dayNumber, default: 1)
+    name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+    focus = try container.decodeIfPresent([MuscleGroup].self, forKey: .focus) ?? []
+    workoutType = try container.decodeIfPresent(WorkoutType.self, forKey: .workoutType) ?? .strength
+    exercises = try container.decodeIfPresent([Exercise].self, forKey: .exercises) ?? []
+    estimatedDuration = AIJSONCoding.decodeInt(from: container, forKey: .estimatedDuration, default: 45)
+    notes = try container.decodeIfPresent(String.self, forKey: .notes)
   }
 }
 
@@ -160,7 +205,7 @@ struct Exercise: Codable, Identifiable, Sendable {
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
-    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    id = AIJSONCoding.decodeUUID(from: container, forKey: .id)
     name = try container.decode(String.self, forKey: .name)
     muscleGroups = try container.decodeIfPresent([MuscleGroup].self, forKey: .muscleGroups) ?? []
 
