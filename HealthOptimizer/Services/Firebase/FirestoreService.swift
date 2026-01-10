@@ -287,23 +287,207 @@ final class FirestoreService {
       "suggestedReviewWeeks": rec.suggestedReviewWeeks
     ]
 
-    // Encode plans as JSON strings for simplicity
+    // Encode plans as nested Firestore documents
     if let supplementPlan = rec.supplementPlan {
-      let jsonData = try JSONEncoder().encode(supplementPlan)
-      data["supplementPlanJSON"] = String(data: jsonData, encoding: .utf8)
+      data["supplementPlan"] = encodeSupplementPlan(supplementPlan)
     }
 
     if let workoutPlan = rec.workoutPlan {
-      let jsonData = try JSONEncoder().encode(workoutPlan)
-      data["workoutPlanJSON"] = String(data: jsonData, encoding: .utf8)
+      data["workoutPlan"] = encodeWorkoutPlan(workoutPlan)
     }
 
     if let dietPlan = rec.dietPlan {
-      let jsonData = try JSONEncoder().encode(dietPlan)
-      data["dietPlanJSON"] = String(data: jsonData, encoding: .utf8)
+      data["dietPlan"] = encodeDietPlan(dietPlan)
     }
 
     return data
+  }
+
+  // MARK: - Supplement Plan Encoding
+
+  private func encodeSupplementPlan(_ plan: SupplementPlan) -> [String: Any] {
+    return [
+      "id": plan.id.uuidString,
+      "supplements": plan.supplements.map { encodeSupplementRecommendation($0) },
+      "generalGuidelines": plan.generalGuidelines,
+      "warnings": plan.warnings,
+      "interactionNotes": plan.interactionNotes,
+      "createdAt": Timestamp(date: plan.createdAt)
+    ]
+  }
+
+  private func encodeSupplementRecommendation(_ supp: SupplementRecommendation) -> [String: Any] {
+    return [
+      "id": supp.id.uuidString,
+      "name": supp.name,
+      "alternateNames": supp.alternateNames,
+      "dosage": supp.dosage,
+      "unit": supp.unit,
+      "timing": supp.timing.rawValue,
+      "frequency": supp.frequency.rawValue,
+      "withFood": supp.withFood,
+      "priority": supp.priority.rawValue,
+      "reasoning": supp.reasoning,
+      "scientificBacking": supp.scientificBacking,
+      "benefits": supp.benefits,
+      "potentialSideEffects": supp.potentialSideEffects,
+      "interactions": supp.interactions,
+      "contraindications": supp.contraindications,
+      "qualityNotes": supp.qualityNotes as Any,
+      "estimatedMonthlyCost": supp.estimatedMonthlyCost as Any,
+      "duration": supp.duration as Any
+    ]
+  }
+
+  // MARK: - Workout Plan Encoding
+
+  private func encodeWorkoutPlan(_ plan: WorkoutPlan) -> [String: Any] {
+    return [
+      "id": plan.id.uuidString,
+      "name": plan.name,
+      "description": plan.description,
+      "durationWeeks": plan.durationWeeks,
+      "daysPerWeek": plan.daysPerWeek,
+      "workoutDays": plan.workoutDays.map { encodeWorkoutDay($0) },
+      "restDayGuidelines": plan.restDayGuidelines,
+      "warmupGuidelines": plan.warmupGuidelines,
+      "cooldownGuidelines": plan.cooldownGuidelines,
+      "progressionNotes": plan.progressionNotes,
+      "equipmentNeeded": plan.equipmentNeeded,
+      "difficultyLevel": plan.difficultyLevel.rawValue,
+      "estimatedCaloriesBurnedPerSession": plan.estimatedCaloriesBurnedPerSession,
+      "createdAt": Timestamp(date: plan.createdAt)
+    ]
+  }
+
+  private func encodeWorkoutDay(_ day: WorkoutDay) -> [String: Any] {
+    return [
+      "id": day.id.uuidString,
+      "dayNumber": day.dayNumber,
+      "name": day.name,
+      "focus": day.focus.map { $0.rawValue },
+      "workoutType": day.workoutType.rawValue,
+      "exercises": day.exercises.map { encodeExercise($0) },
+      "estimatedDuration": day.estimatedDuration,
+      "notes": day.notes as Any
+    ]
+  }
+
+  private func encodeExercise(_ exercise: Exercise) -> [String: Any] {
+    return [
+      "id": exercise.id.uuidString,
+      "name": exercise.name,
+      "muscleGroups": exercise.muscleGroups.map { $0.rawValue },
+      "sets": exercise.sets,
+      "reps": exercise.reps,
+      "restSeconds": exercise.restSeconds,
+      "weight": exercise.weight as Any,
+      "tempo": exercise.tempo as Any,
+      "rpe": exercise.rpe as Any,
+      "instructions": exercise.instructions,
+      "tips": exercise.tips,
+      "commonMistakes": exercise.commonMistakes,
+      "alternatives": exercise.alternatives,
+      "videoURL": exercise.videoURL as Any,
+      "isSuperset": exercise.isSuperset,
+      "supersetWith": exercise.supersetWith as Any
+    ]
+  }
+
+  // MARK: - Diet Plan Encoding
+
+  private func encodeDietPlan(_ plan: DietPlan) -> [String: Any] {
+    return [
+      "id": plan.id.uuidString,
+      "name": plan.name,
+      "description": plan.description,
+      "dailyCalories": plan.dailyCalories,
+      "macros": encodeMacroTargets(plan.macros),
+      "mealSchedule": plan.mealSchedule.map { encodeMealTemplate($0) },
+      "sampleMealPlan": plan.sampleMealPlan.map { encodeDayMealPlan($0) },
+      "generalGuidelines": plan.generalGuidelines,
+      "foodsToInclude": plan.foodsToInclude,
+      "foodsToLimit": plan.foodsToLimit,
+      "hydrationGuidelines": plan.hydrationGuidelines,
+      "mealTimingGuidelines": plan.mealTimingGuidelines,
+      "snackingGuidelines": plan.snackingGuidelines,
+      "createdAt": Timestamp(date: plan.createdAt)
+    ]
+  }
+
+  private func encodeMacroTargets(_ macros: MacroTargets) -> [String: Any] {
+    return [
+      "proteinGrams": macros.proteinGrams,
+      "proteinPercentage": macros.proteinPercentage,
+      "carbsGrams": macros.carbsGrams,
+      "carbsPercentage": macros.carbsPercentage,
+      "fatGrams": macros.fatGrams,
+      "fatPercentage": macros.fatPercentage,
+      "fiberGrams": macros.fiberGrams,
+      "sugarLimitGrams": macros.sugarLimitGrams,
+      "sodiumLimitMg": macros.sodiumLimitMg
+    ]
+  }
+
+  private func encodeMealTemplate(_ template: MealTemplate) -> [String: Any] {
+    return [
+      "id": template.id.uuidString,
+      "mealType": template.mealType.rawValue,
+      "targetCalories": template.targetCalories,
+      "targetProtein": template.targetProtein,
+      "targetCarbs": template.targetCarbs,
+      "targetFat": template.targetFat,
+      "suggestedTime": template.suggestedTime,
+      "guidelines": template.guidelines
+    ]
+  }
+
+  private func encodeDayMealPlan(_ dayPlan: DayMealPlan) -> [String: Any] {
+    return [
+      "id": dayPlan.id.uuidString,
+      "dayNumber": dayPlan.dayNumber,
+      "dayName": dayPlan.dayName,
+      "meals": dayPlan.meals.map { encodeMeal($0) },
+      "totalCalories": dayPlan.totalCalories,
+      "totalProtein": dayPlan.totalProtein,
+      "totalCarbs": dayPlan.totalCarbs,
+      "totalFat": dayPlan.totalFat,
+      "notes": dayPlan.notes as Any
+    ]
+  }
+
+  private func encodeMeal(_ meal: Meal) -> [String: Any] {
+    return [
+      "id": meal.id.uuidString,
+      "mealType": meal.mealType.rawValue,
+      "name": meal.name,
+      "description": meal.description,
+      "ingredients": meal.ingredients.map { encodeIngredient($0) },
+      "instructions": meal.instructions,
+      "prepTimeMinutes": meal.prepTimeMinutes,
+      "cookTimeMinutes": meal.cookTimeMinutes,
+      "servings": meal.servings,
+      "calories": meal.calories,
+      "protein": meal.protein,
+      "carbs": meal.carbs,
+      "fat": meal.fat,
+      "fiber": meal.fiber,
+      "tips": meal.tips,
+      "substitutions": meal.substitutions,
+      "mealPrepFriendly": meal.mealPrepFriendly,
+      "tags": meal.tags
+    ]
+  }
+
+  private func encodeIngredient(_ ingredient: Ingredient) -> [String: Any] {
+    return [
+      "id": ingredient.id.uuidString,
+      "name": ingredient.name,
+      "amount": ingredient.amount,
+      "unit": ingredient.unit,
+      "notes": ingredient.notes as Any,
+      "isOptional": ingredient.isOptional
+    ]
   }
 
   private func encodeProgressEntry(_ entry: ProgressEntryDTO) throws -> [String: Any] {
@@ -403,21 +587,31 @@ final class FirestoreService {
       throw FirestoreError.decodingFailed
     }
 
+    // Decode plans from structured Firestore data
     var supplementPlan: SupplementPlan?
-    if let jsonString = data["supplementPlanJSON"] as? String,
-       let jsonData = jsonString.data(using: .utf8) {
+    if let planData = data["supplementPlan"] as? [String: Any] {
+      supplementPlan = decodeSupplementPlan(from: planData)
+    } else if let jsonString = data["supplementPlanJSON"] as? String,
+              let jsonData = jsonString.data(using: .utf8) {
+      // Legacy: fall back to JSON string decoding for existing data
       supplementPlan = try? JSONDecoder().decode(SupplementPlan.self, from: jsonData)
     }
 
     var workoutPlan: WorkoutPlan?
-    if let jsonString = data["workoutPlanJSON"] as? String,
-       let jsonData = jsonString.data(using: .utf8) {
+    if let planData = data["workoutPlan"] as? [String: Any] {
+      workoutPlan = decodeWorkoutPlan(from: planData)
+    } else if let jsonString = data["workoutPlanJSON"] as? String,
+              let jsonData = jsonString.data(using: .utf8) {
+      // Legacy: fall back to JSON string decoding for existing data
       workoutPlan = try? JSONDecoder().decode(WorkoutPlan.self, from: jsonData)
     }
 
     var dietPlan: DietPlan?
-    if let jsonString = data["dietPlanJSON"] as? String,
-       let jsonData = jsonString.data(using: .utf8) {
+    if let planData = data["dietPlan"] as? [String: Any] {
+      dietPlan = decodeDietPlan(from: planData)
+    } else if let jsonString = data["dietPlanJSON"] as? String,
+              let jsonData = jsonString.data(using: .utf8) {
+      // Legacy: fall back to JSON string decoding for existing data
       dietPlan = try? JSONDecoder().decode(DietPlan.self, from: jsonData)
     }
 
@@ -435,6 +629,233 @@ final class FirestoreService {
       lifestyleRecommendations: data["lifestyleRecommendations"] as? [String] ?? [],
       disclaimers: data["disclaimers"] as? [String] ?? [],
       suggestedReviewWeeks: data["suggestedReviewWeeks"] as? Int ?? 8
+    )
+  }
+
+  // MARK: - Supplement Plan Decoding
+
+  private func decodeSupplementPlan(from data: [String: Any]) -> SupplementPlan {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+    let supplements = (data["supplements"] as? [[String: Any]])?.compactMap { decodeSupplementRecommendation(from: $0) } ?? []
+
+    return SupplementPlan(
+      id: id,
+      supplements: supplements,
+      generalGuidelines: data["generalGuidelines"] as? String ?? "",
+      warnings: data["warnings"] as? [String] ?? [],
+      interactionNotes: data["interactionNotes"] as? [String] ?? [],
+      createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+    )
+  }
+
+  private func decodeSupplementRecommendation(from data: [String: Any]) -> SupplementRecommendation {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+
+    return SupplementRecommendation(
+      id: id,
+      name: data["name"] as? String ?? "",
+      alternateNames: data["alternateNames"] as? [String] ?? [],
+      dosage: data["dosage"] as? String ?? "",
+      unit: data["unit"] as? String ?? "mg",
+      timing: SupplementTiming(rawValue: data["timing"] as? String ?? "") ?? .morning,
+      frequency: SupplementFrequency(rawValue: data["frequency"] as? String ?? "") ?? .daily,
+      withFood: data["withFood"] as? Bool ?? true,
+      priority: SupplementPriority(rawValue: data["priority"] as? String ?? "") ?? .recommended,
+      reasoning: data["reasoning"] as? String ?? "",
+      scientificBacking: data["scientificBacking"] as? String ?? "",
+      benefits: data["benefits"] as? [String] ?? [],
+      potentialSideEffects: data["potentialSideEffects"] as? [String] ?? [],
+      interactions: data["interactions"] as? [String] ?? [],
+      contraindications: data["contraindications"] as? [String] ?? [],
+      qualityNotes: data["qualityNotes"] as? String,
+      estimatedMonthlyCost: data["estimatedMonthlyCost"] as? String,
+      duration: data["duration"] as? String
+    )
+  }
+
+  // MARK: - Workout Plan Decoding
+
+  private func decodeWorkoutPlan(from data: [String: Any]) -> WorkoutPlan {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+    let workoutDays = (data["workoutDays"] as? [[String: Any]])?.compactMap { decodeWorkoutDay(from: $0) } ?? []
+
+    return WorkoutPlan(
+      id: id,
+      name: data["name"] as? String ?? "Custom Workout Plan",
+      description: data["description"] as? String ?? "",
+      durationWeeks: data["durationWeeks"] as? Int ?? 8,
+      daysPerWeek: data["daysPerWeek"] as? Int ?? 4,
+      workoutDays: workoutDays,
+      restDayGuidelines: data["restDayGuidelines"] as? String ?? "",
+      warmupGuidelines: data["warmupGuidelines"] as? String ?? "",
+      cooldownGuidelines: data["cooldownGuidelines"] as? String ?? "",
+      progressionNotes: data["progressionNotes"] as? String ?? "",
+      equipmentNeeded: data["equipmentNeeded"] as? [String] ?? [],
+      difficultyLevel: FitnessLevel(rawValue: data["difficultyLevel"] as? String ?? "") ?? .intermediate,
+      estimatedCaloriesBurnedPerSession: data["estimatedCaloriesBurnedPerSession"] as? String ?? "",
+      createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+    )
+  }
+
+  private func decodeWorkoutDay(from data: [String: Any]) -> WorkoutDay {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+    let focus = (data["focus"] as? [String])?.compactMap { MuscleGroup(rawValue: $0) } ?? []
+    let exercises = (data["exercises"] as? [[String: Any]])?.compactMap { decodeExercise(from: $0) } ?? []
+
+    return WorkoutDay(
+      id: id,
+      dayNumber: data["dayNumber"] as? Int ?? 1,
+      name: data["name"] as? String ?? "",
+      focus: focus,
+      workoutType: WorkoutType(rawValue: data["workoutType"] as? String ?? "") ?? .strength,
+      exercises: exercises,
+      estimatedDuration: data["estimatedDuration"] as? Int ?? 45,
+      notes: data["notes"] as? String
+    )
+  }
+
+  private func decodeExercise(from data: [String: Any]) -> Exercise {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+    let muscleGroups = (data["muscleGroups"] as? [String])?.compactMap { MuscleGroup(rawValue: $0) } ?? []
+
+    return Exercise(
+      id: id,
+      name: data["name"] as? String ?? "",
+      muscleGroups: muscleGroups,
+      sets: data["sets"] as? Int ?? 3,
+      reps: data["reps"] as? String ?? "10",
+      restSeconds: data["restSeconds"] as? Int ?? 60,
+      weight: data["weight"] as? String,
+      tempo: data["tempo"] as? String,
+      rpe: data["rpe"] as? Int,
+      instructions: data["instructions"] as? String ?? "",
+      tips: data["tips"] as? [String] ?? [],
+      commonMistakes: data["commonMistakes"] as? [String] ?? [],
+      alternatives: data["alternatives"] as? [String] ?? [],
+      videoURL: data["videoURL"] as? String,
+      isSuperset: data["isSuperset"] as? Bool ?? false,
+      supersetWith: data["supersetWith"] as? String
+    )
+  }
+
+  // MARK: - Diet Plan Decoding
+
+  private func decodeDietPlan(from data: [String: Any]) -> DietPlan {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+    let macros = (data["macros"] as? [String: Any]).map { decodeMacroTargets(from: $0) } ?? MacroTargets()
+    let mealSchedule = (data["mealSchedule"] as? [[String: Any]])?.compactMap { decodeMealTemplate(from: $0) } ?? []
+    let sampleMealPlan = (data["sampleMealPlan"] as? [[String: Any]])?.compactMap { decodeDayMealPlan(from: $0) } ?? []
+
+    return DietPlan(
+      id: id,
+      name: data["name"] as? String ?? "Custom Diet Plan",
+      description: data["description"] as? String ?? "",
+      dailyCalories: data["dailyCalories"] as? Int ?? 2000,
+      macros: macros,
+      mealSchedule: mealSchedule,
+      sampleMealPlan: sampleMealPlan,
+      generalGuidelines: data["generalGuidelines"] as? [String] ?? [],
+      foodsToInclude: data["foodsToInclude"] as? [String] ?? [],
+      foodsToLimit: data["foodsToLimit"] as? [String] ?? [],
+      hydrationGuidelines: data["hydrationGuidelines"] as? String ?? "",
+      mealTimingGuidelines: data["mealTimingGuidelines"] as? String ?? "",
+      snackingGuidelines: data["snackingGuidelines"] as? String ?? "",
+      createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+    )
+  }
+
+  private func decodeMacroTargets(from data: [String: Any]) -> MacroTargets {
+    return MacroTargets(
+      proteinGrams: data["proteinGrams"] as? Int ?? 150,
+      proteinPercentage: data["proteinPercentage"] as? Int ?? 30,
+      carbsGrams: data["carbsGrams"] as? Int ?? 200,
+      carbsPercentage: data["carbsPercentage"] as? Int ?? 40,
+      fatGrams: data["fatGrams"] as? Int ?? 67,
+      fatPercentage: data["fatPercentage"] as? Int ?? 30,
+      fiberGrams: data["fiberGrams"] as? Int ?? 30,
+      sugarLimitGrams: data["sugarLimitGrams"] as? Int ?? 50,
+      sodiumLimitMg: data["sodiumLimitMg"] as? Int ?? 2300
+    )
+  }
+
+  private func decodeMealTemplate(from data: [String: Any]) -> MealTemplate {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+
+    return MealTemplate(
+      id: id,
+      mealType: MealType(rawValue: data["mealType"] as? String ?? "") ?? .lunch,
+      targetCalories: data["targetCalories"] as? Int ?? 0,
+      targetProtein: data["targetProtein"] as? Int ?? 0,
+      targetCarbs: data["targetCarbs"] as? Int ?? 0,
+      targetFat: data["targetFat"] as? Int ?? 0,
+      suggestedTime: data["suggestedTime"] as? String ?? "",
+      guidelines: data["guidelines"] as? String ?? ""
+    )
+  }
+
+  private func decodeDayMealPlan(from data: [String: Any]) -> DayMealPlan {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+    let meals = (data["meals"] as? [[String: Any]])?.compactMap { decodeMeal(from: $0) } ?? []
+
+    return DayMealPlan(
+      id: id,
+      dayNumber: data["dayNumber"] as? Int ?? 1,
+      dayName: data["dayName"] as? String ?? "",
+      meals: meals,
+      totalCalories: data["totalCalories"] as? Int ?? 0,
+      totalProtein: data["totalProtein"] as? Int ?? 0,
+      totalCarbs: data["totalCarbs"] as? Int ?? 0,
+      totalFat: data["totalFat"] as? Int ?? 0,
+      notes: data["notes"] as? String
+    )
+  }
+
+  private func decodeMeal(from data: [String: Any]) -> Meal {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+    let ingredients = (data["ingredients"] as? [[String: Any]])?.compactMap { decodeIngredient(from: $0) } ?? []
+
+    return Meal(
+      id: id,
+      mealType: MealType(rawValue: data["mealType"] as? String ?? "") ?? .lunch,
+      name: data["name"] as? String ?? "",
+      description: data["description"] as? String ?? "",
+      ingredients: ingredients,
+      instructions: data["instructions"] as? [String] ?? [],
+      prepTimeMinutes: data["prepTimeMinutes"] as? Int ?? 10,
+      cookTimeMinutes: data["cookTimeMinutes"] as? Int ?? 15,
+      servings: data["servings"] as? Int ?? 1,
+      calories: data["calories"] as? Int ?? 0,
+      protein: data["protein"] as? Int ?? 0,
+      carbs: data["carbs"] as? Int ?? 0,
+      fat: data["fat"] as? Int ?? 0,
+      fiber: data["fiber"] as? Int ?? 0,
+      tips: data["tips"] as? [String] ?? [],
+      substitutions: data["substitutions"] as? [String: String] ?? [:],
+      mealPrepFriendly: data["mealPrepFriendly"] as? Bool ?? false,
+      tags: data["tags"] as? [String] ?? []
+    )
+  }
+
+  private func decodeIngredient(from data: [String: Any]) -> Ingredient {
+    let id = (data["id"] as? String).flatMap { UUID(uuidString: $0) } ?? UUID()
+
+    // Handle amount as Int or Double
+    let amount: Double
+    if let doubleValue = data["amount"] as? Double {
+      amount = doubleValue
+    } else if let intValue = data["amount"] as? Int {
+      amount = Double(intValue)
+    } else {
+      amount = 0
+    }
+
+    return Ingredient(
+      id: id,
+      name: data["name"] as? String ?? "",
+      amount: amount,
+      unit: data["unit"] as? String ?? "",
+      notes: data["notes"] as? String,
+      isOptional: data["isOptional"] as? Bool ?? false
     )
   }
 
