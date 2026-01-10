@@ -95,9 +95,9 @@ nonisolated enum AIJSONCoding {
   // MARK: - Flexible Array Decoding
 
   /// Decode a value that may be a String array or a single String
-  static func decodeStringArray(
-    from container: KeyedDecodingContainer<some CodingKey>,
-    forKey key: some CodingKey
+  static func decodeStringArray<K: CodingKey>(
+    from container: KeyedDecodingContainer<K>,
+    forKey key: K
   ) -> [String] {
     if let array = try? container.decode([String].self, forKey: key) {
       return array
@@ -108,9 +108,9 @@ nonisolated enum AIJSONCoding {
   }
 
   /// Decode a value that may be Int or String, returning Int
-  static func decodeInt(
-    from container: KeyedDecodingContainer<some CodingKey>,
-    forKey key: some CodingKey,
+  static func decodeInt<K: CodingKey>(
+    from container: KeyedDecodingContainer<K>,
+    forKey key: K,
     default defaultValue: Int
   ) -> Int {
     if let intValue = try? container.decode(Int.self, forKey: key) {
@@ -123,9 +123,9 @@ nonisolated enum AIJSONCoding {
   }
 
   /// Decode a value that may be Double or Int, returning Double
-  static func decodeDouble(
-    from container: KeyedDecodingContainer<some CodingKey>,
-    forKey key: some CodingKey,
+  static func decodeDouble<K: CodingKey>(
+    from container: KeyedDecodingContainer<K>,
+    forKey key: K,
     default defaultValue: Double
   ) -> Double {
     if let doubleValue = try? container.decode(Double.self, forKey: key) {
@@ -137,9 +137,9 @@ nonisolated enum AIJSONCoding {
   }
 
   /// Decode a value that may be String, Int, or Double, returning String
-  static func decodeString(
-    from container: KeyedDecodingContainer<some CodingKey>,
-    forKey key: some CodingKey,
+  static func decodeString<K: CodingKey>(
+    from container: KeyedDecodingContainer<K>,
+    forKey key: K,
     default defaultValue: String = ""
   ) -> String {
     if let stringValue = try? container.decode(String.self, forKey: key) {
