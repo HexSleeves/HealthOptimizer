@@ -108,6 +108,41 @@ struct SupplementRecommendation: Codable, Identifiable, Sendable {
     self.duration = duration
   }
 
+  // Custom decoding to handle dosage as either String or Number
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    name = try container.decode(String.self, forKey: .name)
+    alternateNames = try container.decodeIfPresent([String].self, forKey: .alternateNames) ?? []
+
+    // Handle dosage as String or Number
+    if let dosageString = try? container.decode(String.self, forKey: .dosage) {
+      dosage = dosageString
+    } else if let dosageInt = try? container.decode(Int.self, forKey: .dosage) {
+      dosage = String(dosageInt)
+    } else if let dosageDouble = try? container.decode(Double.self, forKey: .dosage) {
+      dosage = String(dosageDouble)
+    } else {
+      dosage = ""
+    }
+
+    unit = try container.decodeIfPresent(String.self, forKey: .unit) ?? "mg"
+    timing = try container.decodeIfPresent(SupplementTiming.self, forKey: .timing) ?? .morning
+    frequency = try container.decodeIfPresent(SupplementFrequency.self, forKey: .frequency) ?? .daily
+    withFood = try container.decodeIfPresent(Bool.self, forKey: .withFood) ?? true
+    priority = try container.decodeIfPresent(SupplementPriority.self, forKey: .priority) ?? .recommended
+    reasoning = try container.decodeIfPresent(String.self, forKey: .reasoning) ?? ""
+    scientificBacking = try container.decodeIfPresent(String.self, forKey: .scientificBacking) ?? ""
+    benefits = try container.decodeIfPresent([String].self, forKey: .benefits) ?? []
+    potentialSideEffects = try container.decodeIfPresent([String].self, forKey: .potentialSideEffects) ?? []
+    interactions = try container.decodeIfPresent([String].self, forKey: .interactions) ?? []
+    contraindications = try container.decodeIfPresent([String].self, forKey: .contraindications) ?? []
+    qualityNotes = try container.decodeIfPresent(String.self, forKey: .qualityNotes)
+    estimatedMonthlyCost = try container.decodeIfPresent(String.self, forKey: .estimatedMonthlyCost)
+    duration = try container.decodeIfPresent(String.self, forKey: .duration)
+  }
+
   /// Full dosage display string
   var dosageDisplay: String {
     "\(dosage) \(unit)"
