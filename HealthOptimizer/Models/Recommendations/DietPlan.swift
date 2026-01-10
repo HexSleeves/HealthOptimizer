@@ -304,6 +304,43 @@ struct Meal: Codable, Identifiable, Sendable {
     self.tags = tags
   }
 
+  // Helper to decode Int from Int or String
+  private static func decodeInt(from container: KeyedDecodingContainer<CodingKeys>, forKey key: CodingKeys, default defaultValue: Int) -> Int {
+    if let intValue = try? container.decode(Int.self, forKey: key) {
+      return intValue
+    } else if let stringValue = try? container.decode(String.self, forKey: key),
+              let intValue = Int(stringValue) {
+      return intValue
+    }
+    return defaultValue
+  }
+
+  // Custom decoding to handle flexible types from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    mealType = try container.decode(MealType.self, forKey: .mealType)
+    name = try container.decode(String.self, forKey: .name)
+    description = try container.decodeIfPresent(String.self, forKey: .description) ?? ""
+    ingredients = try container.decodeIfPresent([Ingredient].self, forKey: .ingredients) ?? []
+    instructions = try container.decodeIfPresent([String].self, forKey: .instructions) ?? []
+
+    prepTimeMinutes = Self.decodeInt(from: container, forKey: .prepTimeMinutes, default: 10)
+    cookTimeMinutes = Self.decodeInt(from: container, forKey: .cookTimeMinutes, default: 15)
+    servings = Self.decodeInt(from: container, forKey: .servings, default: 1)
+    calories = Self.decodeInt(from: container, forKey: .calories, default: 0)
+    protein = Self.decodeInt(from: container, forKey: .protein, default: 0)
+    carbs = Self.decodeInt(from: container, forKey: .carbs, default: 0)
+    fat = Self.decodeInt(from: container, forKey: .fat, default: 0)
+    fiber = Self.decodeInt(from: container, forKey: .fiber, default: 0)
+
+    tips = try container.decodeIfPresent([String].self, forKey: .tips) ?? []
+    substitutions = try container.decodeIfPresent([String: String].self, forKey: .substitutions) ?? [:]
+    mealPrepFriendly = try container.decodeIfPresent(Bool.self, forKey: .mealPrepFriendly) ?? false
+    tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+  }
+
   /// Total time display
   var totalTimeDisplay: String {
     let total = prepTimeMinutes + cookTimeMinutes
@@ -344,6 +381,27 @@ struct Ingredient: Codable, Identifiable, Sendable {
     self.unit = unit
     self.notes = notes
     self.isOptional = isOptional
+  }
+
+  // Custom decoding to handle amount as Int or Double
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    name = try container.decode(String.self, forKey: .name)
+
+    // Handle amount as Int or Double
+    if let amountDouble = try? container.decode(Double.self, forKey: .amount) {
+      amount = amountDouble
+    } else if let amountInt = try? container.decode(Int.self, forKey: .amount) {
+      amount = Double(amountInt)
+    } else {
+      amount = 0
+    }
+
+    unit = try container.decode(String.self, forKey: .unit)
+    notes = try container.decodeIfPresent(String.self, forKey: .notes)
+    isOptional = try container.decodeIfPresent(Bool.self, forKey: .isOptional) ?? false
   }
 
   /// Display string for ingredient

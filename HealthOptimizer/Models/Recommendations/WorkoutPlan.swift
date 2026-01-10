@@ -150,6 +150,65 @@ struct Exercise: Codable, Identifiable, Sendable {
     self.supersetWith = supersetWith
   }
 
+  // Custom decoding to handle flexible types from AI
+  init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+
+    id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+    name = try container.decode(String.self, forKey: .name)
+    muscleGroups = try container.decodeIfPresent([MuscleGroup].self, forKey: .muscleGroups) ?? []
+
+    // Handle sets as Int or String
+    if let setsInt = try? container.decode(Int.self, forKey: .sets) {
+      sets = setsInt
+    } else if let setsString = try? container.decode(String.self, forKey: .sets),
+              let setsInt = Int(setsString) {
+      sets = setsInt
+    } else {
+      sets = 3
+    }
+
+    // Handle reps as String or Int
+    if let repsString = try? container.decode(String.self, forKey: .reps) {
+      reps = repsString
+    } else if let repsInt = try? container.decode(Int.self, forKey: .reps) {
+      reps = String(repsInt)
+    } else {
+      reps = "10"
+    }
+
+    // Handle restSeconds as Int or String
+    if let restInt = try? container.decode(Int.self, forKey: .restSeconds) {
+      restSeconds = restInt
+    } else if let restString = try? container.decode(String.self, forKey: .restSeconds),
+              let restInt = Int(restString) {
+      restSeconds = restInt
+    } else {
+      restSeconds = 60
+    }
+
+    weight = try container.decodeIfPresent(String.self, forKey: .weight)
+    tempo = try container.decodeIfPresent(String.self, forKey: .tempo)
+
+    // Handle rpe as Int or String
+    if let rpeInt = try? container.decode(Int.self, forKey: .rpe) {
+      rpe = rpeInt
+    } else if let rpeString = try? container.decode(String.self, forKey: .rpe),
+              let rpeInt = Int(rpeString) {
+      rpe = rpeInt
+    } else {
+      rpe = nil
+    }
+
+    instructions = try container.decodeIfPresent(String.self, forKey: .instructions) ?? ""
+    tips = try container.decodeIfPresent([String].self, forKey: .tips) ?? []
+    commonMistakes = try container.decodeIfPresent([String].self, forKey: .commonMistakes) ?? []
+    alternatives = try container.decodeIfPresent([String].self, forKey: .alternatives) ?? []
+    videoURL = try container.decodeIfPresent(String.self, forKey: .videoURL)
+    isSuperset = try container.decodeIfPresent(Bool.self, forKey: .isSuperset) ?? false
+    supersetWith = try container.decodeIfPresent(String.self, forKey: .supersetWith)
+  }
+
   /// Display string for sets and reps
   var setsRepsDisplay: String {
     "\(sets) × \(reps)"
