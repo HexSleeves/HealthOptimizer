@@ -151,6 +151,12 @@ struct ProfileView: View {
           }
 
           NavigationLink {
+            RemindersSettingsView()
+          } label: {
+            Label("Reminders", systemImage: "bell.badge.fill")
+          }
+
+          NavigationLink {
             PrivacyInfoView()
           } label: {
             Label("Privacy & Data", systemImage: "lock.shield.fill")

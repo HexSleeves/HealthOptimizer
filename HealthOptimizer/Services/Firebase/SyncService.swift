@@ -144,6 +144,68 @@ final class SyncService {
     }
   }
 
+  /// Sync a progress entry to cloud
+  func syncProgressEntry(_ entry: ProgressEntry) async {
+    guard authService.isSignedIn else { return }
+
+    do {
+      let dto = ProgressEntryDTO(
+        id: entry.id,
+        date: entry.date,
+        weight: entry.weight,
+        bodyFatPercentage: entry.bodyFatPercentage,
+        waistCircumference: entry.waistCircumference,
+        notes: entry.notes,
+        mood: entry.mood,
+        energyLevel: entry.energyLevel,
+        sleepHours: entry.sleepHours,
+        workoutsCompleted: entry.workoutsCompleted,
+        supplementsAdherence: entry.supplementsAdherence,
+        dietAdherence: entry.dietAdherence
+      )
+      try await firestoreService.saveProgressEntry(dto)
+      print("[SyncService] Progress entry synced to cloud")
+    } catch {
+      print("[SyncService] Failed to sync progress entry: \(error)")
+    }
+  }
+
+  /// Sync progress entries from cloud
+  func syncProgressEntriesFromCloud() async throws {
+    guard authService.isSignedIn else { return }
+
+    // Fetch entries from last 90 days
+    let startDate = Calendar.current.date(byAdding: .day, value: -90, to: Date()) ?? Date()
+    let cloudEntries = try await firestoreService.fetchProgressEntries(from: startDate, to: Date())
+
+    let context = persistenceService.mainContext
+    let localEntries = persistenceService.fetchAllProgressEntries()
+    let localIds = Set(localEntries.map { $0.id })
+
+    for dto in cloudEntries {
+      if !localIds.contains(dto.id) {
+        // Create new entry from cloud
+        let entry = ProgressEntry(
+          date: dto.date,
+          weight: dto.weight,
+          bodyFatPercentage: dto.bodyFatPercentage,
+          waistCircumference: dto.waistCircumference,
+          notes: dto.notes,
+          mood: dto.mood,
+          energyLevel: dto.energyLevel,
+          sleepHours: dto.sleepHours,
+          workoutsCompleted: dto.workoutsCompleted,
+          supplementsAdherence: dto.supplementsAdherence,
+          dietAdherence: dto.dietAdherence
+        )
+        context.insert(entry)
+      }
+    }
+
+    try context.save()
+    print("[SyncService] Progress entries synced from cloud")
+  }
+
   // MARK: - Local Update Helpers
 
   private func updateLocalProfile(from dto: UserProfileDTO) throws {

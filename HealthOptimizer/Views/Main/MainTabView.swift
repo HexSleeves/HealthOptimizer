@@ -28,6 +28,13 @@ struct MainTabView: View {
         }
         .tag(Tab.dashboard)
 
+      // Progress
+      ProgressTrackingView()
+        .tabItem {
+          Label("Progress", systemImage: "chart.line.uptrend.xyaxis")
+        }
+        .tag(Tab.progress)
+
       // Supplements
       SupplementsView(recommendation: dashboardViewModel.currentRecommendation)
         .tabItem {
@@ -41,13 +48,6 @@ struct MainTabView: View {
           Label("Workouts", systemImage: "dumbbell.fill")
         }
         .tag(Tab.workouts)
-
-      // Diet
-      DietView(recommendation: dashboardViewModel.currentRecommendation)
-        .tabItem {
-          Label("Diet", systemImage: "fork.knife")
-        }
-        .tag(Tab.diet)
 
       // Profile
       ProfileView()
@@ -66,9 +66,9 @@ struct MainTabView: View {
 
 enum Tab: String, CaseIterable {
   case dashboard = "Dashboard"
+  case progress = "Progress"
   case supplements = "Supplements"
   case workouts = "Workouts"
-  case diet = "Diet"
   case profile = "Profile"
 }
 
