@@ -13,7 +13,7 @@ struct RemindersSettingsView: View {
 
   // MARK: - Properties
 
-  @StateObject private var notificationService = NotificationService.shared
+  @State private var notificationService = NotificationService.shared
   @State private var showingAuthorizationAlert = false
 
   // MARK: - Body
@@ -269,7 +269,7 @@ struct RemindersSettingsView: View {
 // MARK: - Supplement Reminder Times View
 
 struct SupplementReminderTimesView: View {
-  @StateObject private var notificationService = NotificationService.shared
+  @State private var notificationService = NotificationService.shared
   @State private var times: [Int] = []
   @State private var showingAddTime = false
   @State private var newTimeHour = 8

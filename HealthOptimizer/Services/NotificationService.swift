@@ -12,16 +12,17 @@ import UserNotifications
 
 /// Service for managing local notifications and reminders
 @MainActor
-final class NotificationService: ObservableObject {
+@Observable
+final class NotificationService {
 
   // MARK: - Singleton
 
   static let shared = NotificationService()
 
-  // MARK: - Published Properties
+  // MARK: - Observable Properties
 
-  @Published var isAuthorized = false
-  @Published var authorizationStatus: UNAuthorizationStatus = .notDetermined
+  var isAuthorized = false
+  var authorizationStatus: UNAuthorizationStatus = .notDetermined
 
   // MARK: - Constants
 
