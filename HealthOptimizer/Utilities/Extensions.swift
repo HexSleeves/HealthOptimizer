@@ -161,6 +161,14 @@ extension Array where Element: Identifiable {
   }
 }
 
+extension Array where Element: Hashable {
+  /// Remove duplicates while preserving order
+  func uniqued() -> [Element] {
+    var seen = Set<Element>()
+    return filter { seen.insert($0).inserted }
+  }
+}
+
 // MARK: - Bundle Extensions
 
 extension Bundle {

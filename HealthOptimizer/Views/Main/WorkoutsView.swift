@@ -243,7 +243,7 @@ struct WorkoutDayCard: View {
 
           // Muscle groups
           HStack(spacing: 4) {
-            ForEach(day.focus.prefix(3), id: \.rawValue) { muscle in
+            ForEach(day.focus.uniqued().prefix(3), id: \.rawValue) { muscle in
               Text(muscle.rawValue)
                 .font(.caption2)
                 .padding(.horizontal, 6)
@@ -327,7 +327,7 @@ struct WorkoutDayDetailSheet: View {
               .font(.headline)
 
             FlowLayout(spacing: 8) {
-              ForEach(day.focus, id: \.rawValue) { muscle in
+              ForEach(day.focus.uniqued(), id: \.rawValue) { muscle in
                 HStack(spacing: 4) {
                   Image(systemName: muscle.icon)
                   Text(muscle.rawValue)
